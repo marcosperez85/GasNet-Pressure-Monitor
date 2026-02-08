@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel='stylesheet' type='text/css' media='screen' href='./style_landing.css'>
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- Contenedor general de toda el contenido de la página -->
+    <div id="contenedorGeneral">
+
+        <!-- Contenedor de los logos y título general -->
+        <div id="contenedorBannerConLogo">
+            <div id="tituloGeneral">Monitor de presión de gas</div>
+        </div>
+
+        <!-- Contenedor de cada columna donde se alojan los distintos grupos de datos-->
+        <div id="contenedorColumnas">
+
+            <!-- Contenedor de columna 1 para Google Maps -->
+            <div id="columna1">
+                <div id="grupoColumna1" class="estiloGrupos estiloGrupoColumna1">
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <!-- Contenedor de columna 2 para datos Read Only -->
+            <div id="columna2">
+
+                <!-- Parámetros del VDF -->
+                <div id="grupoColumna2" class="estiloGrupos estiloGrupoColumna2">
+                    <label id="tituloColumna2" class="nombreDeGrupo estiloNegrita">Variables a monitorear:</label>
+
+                    <div class="filasColumna2">
+                        <!-- DateTime picker con label para mejor accesibilidad -->
+                        <label for="datetimePicker" class="labelReadOnly">Selecciona fecha y hora:</label>
+                        <input type="datetime-local" id="datetimePicker" class="estiloDateTimePicker">
+                    </div>
+
+                    <div class="filasColumna2">
+                        <div id="labelPresionDeEntradaUpstream" class="labelReadOnly">Presión de entrada:</div>
+                        <div id="presionDeEntradaUpstream" class="textValue">Preview</div>
+                    </div>
+
+                    <div class="filasColumna2">
+                        <div id="labelPresionDeEntradaDownstream" class="labelReadOnly">Presión de entrada downstream:
+                        </div>
+                        <div id="presionDeEntradaDownstream" class="textValue">Preview</div>
+                    </div>
+
+                    <div class="filasColumna2">
+                        <div id="labelVariacionDePresion" class="labelReadOnly">Variacion en 48hs:</div>
+                        <div id="variacionDePresion" class="textValue">Preview</div>
+                    </div>
+
+                    <div class="filasColumna2">
+                        <div id="labelPresionFutura" class="labelReadOnly">Presión de entrada en 48hs:</div>
+                        <div id="presionFutura" class="textValue">Preview</div>
+                    </div>
+
+                    <div class="filasColumna2">
+                        <div id="labelMinimoContractual" class="labelReadOnly">Mínimo contractual:</div>
+                        <div id="minimoContractual" class="textValue">Preview</div>
+                    </div>
+
+                    <div class="filasColumna2">
+                        <div id="labelTiempoRestante" class="labelReadOnly">Tiempo restante para umbral:</div>
+                        <div id="tiempoRestante" class="textValue">Preview</div>
+                    </div>
+
+                    <button id="botonConsultarChatbot" class="botonChico">Consultar chatbot</button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    </div>
+    <!-- Cargar primero el archivo de configuración -->
+    <script src="./config.js"></script>
+
+    <!-- Después cargar el script principal que usa la configuración -->
+    <script src="./js/landing.js"></script>
+</body>
+
+</html>
