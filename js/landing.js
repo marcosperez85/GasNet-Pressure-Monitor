@@ -5,6 +5,27 @@ if (typeof CONFIG === 'undefined' || !CONFIG.GOOGLE_MAPS_API_KEY) {
 
 const apiKey = CONFIG.GOOGLE_MAPS_API_KEY;
 
+// URL donde está alojado el JSON de datos (puede ser un bucket S3 o ruta local)
+const DATA_URL = './data/dataset_2022-2025.json';
+
+// Variable global para almacenar los datos cargados
+let datasetCompleto = [];
+
+// Cargar datos JSON al iniciar
+async function cargarDatos() {
+    try {
+        const response = await fetch(DATA_URL);
+        if (!response.ok) {
+            throw new Error('Error al cargar datos');
+        }
+        datasetCompleto = await response.json();
+        console.log('Datos cargados correctamente:', datasetCompleto.length, 'registros');
+    } catch (error) {
+        console.error('Error cargando datos:', error);
+        alert('No se pudieron cargar los datos. Por favor, verifica la conexión e intenta de nuevo.');
+    }
+}
+
 // ***** CONFIGURACIÓN DE GOOGLE MAPS *****
 const GOOGLE_MAPS_CONFIG = {
     apiKey: apiKey,
@@ -50,19 +71,127 @@ const $tiempoRestante = document.getElementById("tiempoRestante");
 
 const $botonConsultarChatbot = document.getElementById("botonConsultarChatbot");
 
-// let inputResultSet = data.inputResultSet;
 let inputMinimoContractual = 42;
-// let outputFechaHora = data.outputFechaHora;
 let selectedDateTime;
 let formattedDateTime;
 
-setCurrentDateTimeAsDefault();
+// Cargar fecha y hora actual
+// setCurrentDateTimeAsDefault();
+
+// Cargar fecha y hora predefinidos
+setSpecificDateTimeAsDefault();
+
+// ***** FUNCIONES PARA MOSTRAR VALORES EN PANTALLA *****
 
 // Mostrar en pantalla el valor de la variable global del mínimo contractual
 $minimoContractual.textContent = inputMinimoContractual;
 console.log("El minimo contractual es: " + inputMinimoContractual);
 
-// Función para mostrar valores en pantalla
+// Buscar datos según la fecha seleccionada
+function buscarDatosPorFecha() {
+    if (!selectedDateTime || datasetCompleto.length === 0) {
+        console.warn('No hay fecha seleccionada o datos cargados');
+        return null;
+    }
+
+    // Convertir a formato ISO para comparar con el dataset
+    const fechaSeleccionada = new Date(selectedDateTime).toISOString();
+    
+    // Buscar el registro más cercano a la fecha seleccionada
+    let registroMasCercano = null;
+    let menorDiferencia = Infinity;
+    
+    for (const registro of datasetCompleto) {
+        const fechaRegistro = new Date(registro.timestamp);
+        const diferencia = Math.abs(new Date(fechaSeleccionada) - fechaRegistro);
+        
+        if (diferencia < menorDiferencia) {
+            menorDiferencia = diferencia;
+            registroMasCercano = registro;
+        }
+    }
+    
+    return registroMasCercano;
+}
+
+// Actualizar todos los valores en pantalla
+function actualizarValoresEnPantalla() {
+    const datos = buscarDatosPorFecha();
+    
+    if (!datos) {
+        // Si no hay datos, mostrar mensaje en los campos
+        $presionDeEntradaUpstream.textContent = "No disponible";
+        $presionDeEntradaDownstream.textContent = "No disponible";
+        $variacionDePresion.textContent = "No disponible";
+        $presionFutura.textContent = "No disponible";
+        $tiempoRestante.textContent = "No disponible";
+        return;
+    }
+    
+    // Convertir valores a números y formatear con 2 decimales
+    const presionUpstream = parseFloat(datos.upstream_point.value).toFixed(2);
+    const presionDownstream = parseFloat(datos.downstream_point.value).toFixed(2);
+    const variacion = parseFloat(datos.prediction.value).toFixed(2);
+    
+    // Calcular presión futura (presión actual + predicción)
+    const presionFuturaCalculada = (parseFloat(presionUpstream) + parseFloat(variacion)).toFixed(2);
+    
+    $presionDeEntradaUpstream.textContent = presionUpstream + " kg/cm²";
+    $presionDeEntradaDownstream.textContent = presionDownstream + " kg/cm²";
+    $variacionDePresion.textContent = variacion + " kg/cm²";
+    $presionFutura.textContent = presionFuturaCalculada + " kg/cm²";
+    
+    // Calcular tiempo restante para llegar al mínimo contractual
+    calcularTiempoRestanteParaUmbral(presionUpstream, variacion);
+}
+
+// Función para calcular el tiempo hasta llegar al mínimo contractual
+function calcularTiempoRestanteParaUmbral(presionActual, variacion) {
+    presionActual = parseFloat(presionActual);
+    variacion = parseFloat(variacion);
+    
+    // Si no hay variación o es positiva, no hay peligro
+    if (variacion >= 0 || isNaN(variacion)) {
+        $tiempoRestante.textContent = "No hay riesgo";
+        $tiempoRestante.className = "textValue";
+        return;
+    }
+    
+    // Calcular horas hasta llegar al mínimo contractual
+    const diferencia = presionActual - inputMinimoContractual;
+    const horasHastaUmbral = Math.abs(diferencia / variacion) * 48; // Variación es por 48h
+    
+    // Si ya estamos por debajo del mínimo
+    if (presionActual < inputMinimoContractual) {
+        $tiempoRestante.textContent = "¡Ya por debajo del mínimo!";
+        $tiempoRestante.className = "textValue textoAlerta";
+        return;
+    }
+    
+    // Formatear el resultado
+    if (horasHastaUmbral > 72) {
+        const dias = Math.floor(horasHastaUmbral / 24);
+        $tiempoRestante.textContent = `${dias} días`;
+        $tiempoRestante.className = "textValue";
+    } else {
+        $tiempoRestante.textContent = `${Math.floor(horasHastaUmbral)} horas`;
+        $tiempoRestante.className = horasHastaUmbral < 24 ? "textValue textoAlerta" : "textValue";
+    }
+}
+
+// Inicializar la carga de datos
+document.addEventListener('DOMContentLoaded', function () {
+    // Cargar los datos después de un pequeño delay
+    setTimeout(async function () {
+        await cargarDatos();
+        // Después de cargar los datos, establecer la hora actual y actualizar la pantalla
+        // setCurrentDateTimeAsDefault();
+        setSpecificDateTimeAsDefault();
+        actualizarValoresEnPantalla();
+    }, 600);
+});
+
+
 
 // ***** FUNCIONES DE GOOGLE MAPS *****
 function initMap() {
@@ -151,25 +280,29 @@ $botonConsultarChatbot.addEventListener('click', function () {
     window.location.href = './chatbot/index.html';
 });
 
+// Event listener del datetimePicker para actualizar los valores
 $datetimePicker.addEventListener('change', function () {
     selectedDateTime = this.value;
 
-    // Convertir a objeto Date
+    // Convertir a objeto Date (código existente)
     let dateObject = new Date(selectedDateTime);
 
-    // Formatear la fecha en el formato deseado: MM-DD-YYYY HH:MM:SS
+    // Formatear la fecha (código existente)
     let month = String(dateObject.getMonth() + 1).padStart(2, '0');
     let day = String(dateObject.getDate()).padStart(2, '0');
     let year = dateObject.getFullYear();
     let hours = String(dateObject.getHours()).padStart(2, '0');
     let minutes = String(dateObject.getMinutes()).padStart(2, '0');
-    let seconds = '00'; // Los datetime-local inputs no incluyen segundos, así que ponemos 00
+    let seconds = '00'; 
 
-    // Formato: MM-DD-YYYY HH:MM:SS
+    // Formato: MM-DD-YYYY HH:MM:SS (código existente)
     formattedDateTime = `${month}-${day}-${year} ${hours}:${minutes}:${seconds}`;
 
     console.log("Fecha y hora original:", selectedDateTime);
     console.log("Fecha y hora formateada:", formattedDateTime);
+    
+    // Actualizar la pantalla con los datos correspondientes
+    actualizarValoresEnPantalla();
 });
 
 // Método 1: Establecer fecha actual como valor por defecto
@@ -194,14 +327,24 @@ function setCurrentDateTimeAsDefault() {
 
 // Método 2: Establecer una fecha específica como valor por defecto
 function setSpecificDateTimeAsDefault() {
-    // Por ejemplo: 30 de junio de 2025 a las 11:59
-    formattedDateTime = "2025-06-30 11:59:59";
-
-    // Establecer el valor
+    // Fecha específica: 1 de enero de 2025 a las 00:00
+    const fechaPredeterminada = new Date(2025, 0, 1, 0, 0); // Año, mes (0-11), día, hora, minutos
+    
+    // Formatear al formato requerido por el input datetime-local: YYYY-MM-DDThh:mm
+    const year = fechaPredeterminada.getFullYear();
+    const month = String(fechaPredeterminada.getMonth() + 1).padStart(2, '0');
+    const day = String(fechaPredeterminada.getDate()).padStart(2, '0');
+    const hours = String(fechaPredeterminada.getHours()).padStart(2, '0');
+    const minutes = String(fechaPredeterminada.getMinutes()).padStart(2, '0');
+    
+    const formattedDateTimeForInput = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    // Establecer el valor y actualizar la variable global
     if ($datetimePicker) {
-        $datetimePicker.value = formattedDateTime;
+        $datetimePicker.value = formattedDateTimeForInput;
+        selectedDateTime = formattedDateTimeForInput;
+        formattedDateTime = `${month}-${day}-${year} ${hours}:${minutes}:00`;
     }
-
 }
 
 // Función para manejar el clic en un marcador
