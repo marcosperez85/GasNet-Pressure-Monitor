@@ -8,6 +8,15 @@ const api_gateway_url = CONFIG.API_GATEWAY_URL;
 const $cuadroParaUserInput = document.getElementById('cuadroParaUserInput');
 const $chatBox = document.getElementById('chat-box');
 
+// Agregar evento para los botones de navegación
+document.querySelectorAll('.navButton').forEach(button => {
+    button.addEventListener('click', function() {
+        if (this.textContent.includes('Map View')) {
+            window.location.href = '../index.html';
+        }
+    });
+});
+
 async function sendMessage() {
     const textoDelUsuario = $cuadroParaUserInput.value;
 
@@ -20,7 +29,7 @@ async function sendMessage() {
 
     // Mostrar indicador de carga
     const loadingId = `loading-${Date.now()}`;
-    $chatBox.innerHTML += `<p id="${loadingId}"><em>Escribiendo...</em></p>`;
+    $chatBox.innerHTML += `<p id="${loadingId}"><em><i class="fas fa-spinner fa-spin"></i> Escribiendo...</em></p>`;
     $chatBox.scrollTop = $chatBox.scrollHeight;
 
     try {
@@ -73,4 +82,11 @@ $cuadroParaUserInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         sendMessage();
     }
+});
+
+// Mensaje de bienvenida al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        $chatBox.innerHTML += `<p><strong>Chatbot:</strong> ¡Hola! Soy el asistente de GasNet Pressure Monitor. ¿En qué puedo ayudarte hoy?</p>`;
+    }, 500);
 });
