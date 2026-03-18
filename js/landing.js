@@ -69,8 +69,6 @@ const $presionFutura = document.getElementById("presionFutura");
 const $minimoContractual = document.getElementById("minimoContractual");
 const $tiempoRestante = document.getElementById("tiempoRestante");
 
-const $botonConsultarChatbot = document.getElementById("botonConsultarChatbot");
-
 let inputMinimoContractual = 42;
 let selectedDateTime;
 let formattedDateTime;
@@ -609,6 +607,9 @@ function loadGoogleMapsScript() {
 // ***** INICIALIZACIÓN *****
 // Cargar Google Maps cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', function () {
+    // Agregar event listeners para la navegación
+    setupNavigation();
+    
     // Pequeño delay para asegurar que todos los elementos del DOM estén listos
     setTimeout(function () {
         loadGoogleMapsScript();
@@ -618,11 +619,18 @@ document.addEventListener('DOMContentLoaded', function () {
 // Hacer initMap global para que Google Maps pueda acceder a ella
 window.initMap = initMap;
 
-// Agregar event listeners para los elementos interactivos
-$botonConsultarChatbot.addEventListener('click', function () {
-    console.log("Botón presionado");
-    window.location.href = './chatbot/index.html';
-});
+// Función para configurar la navegación
+function setupNavigation() {
+    // Agregar event listeners para los botones de navegación
+    document.querySelectorAll('.navButton').forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.textContent.includes('AI Assistant')) {
+                window.location.href = './chatbot/index.html';
+            }
+            // Aquí se pueden agregar más navegaciones para otros botones si es necesario
+        });
+    });
+}
 
 // Event listener del datetimePicker para actualizar los valores
 $datetimePicker.addEventListener('change', function () {
@@ -716,5 +724,4 @@ function loadDataForLocation(locationId) {
     console.log(`Cargando datos para la ubicación ID: ${locationId}`);
 
     // Aquí podría ir una llamada a una API, una consulta a tu base de datos, etc.
-    // Por ejemplo:
 }

@@ -367,29 +367,6 @@ body {
     color: var(--text-color);
 }
 
-.actionButton {
-    width: 100%;
-    padding: 10px 0;
-    background-color: var(--primary-color);
-    color: var(--panel-background);
-    border: none;
-    border-radius: var(--border-radius-md);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 16px;
-    transition: all 0.2s ease;
-}
-
-.actionButton:hover {
-    background-color: #e67e00;
-    transform: translateY(-1px);
-}
-
 /* Responsive design */
 @media screen and (max-width: 1200px) {
     #mainContent {
