@@ -1,3 +1,14 @@
+# Archivos de configuración locales
 config.js
 ./js/config.js
 .venv
+
+# Archivos de estado de Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.tfplan
+
+# Variables de entorno de Terraform
+terraform/.terraform.tfvars
+terraform/terraform.tfvars
