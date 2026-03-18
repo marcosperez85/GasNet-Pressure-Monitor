@@ -143,6 +143,9 @@ function actualizarValoresEnPantalla() {
     
     // Calcular tiempo restante para llegar al mínimo contractual
     calcularTiempoRestanteParaUmbral(presionUpstream, variacion);
+    
+    // Actualizar el gráfico de tendencias con los nuevos datos
+    actualizarGraficoTendencias();
 }
 
 // Función para calcular el tiempo hasta llegar al mínimo contractual
@@ -179,6 +182,264 @@ function calcularTiempoRestanteParaUmbral(presionActual, variacion) {
     }
 }
 
+// ***** ECHARTS - GRÁFICO DE TENDENCIAS *****
+let trendChart;
+let currentPeriod = 'day'; // Período predeterminado
+
+// Inicializar el gráfico de tendencias
+function initTrendChart() {
+    const chartDom = document.getElementById('trendChart');
+    if (!chartDom) {
+        console.error('Elemento del gráfico no encontrado');
+        return;
+    }
+    
+    // Configurar tema oscuro para ECharts
+    const darkTheme = {
+        backgroundColor: '#2a2e35',
+        textStyle: {
+            color: '#e0e0e0',
+        },
+        title: {
+            textStyle: {
+                color: '#e0e0e0'
+            }
+        },
+        legend: {
+            textStyle: {
+                color: '#a0a0a0'
+            }
+        },
+        xAxis: {
+            axisLine: {
+                lineStyle: {
+                    color: '#3a3f48'
+                }
+            },
+            axisLabel: {
+                color: '#a0a0a0'
+            },
+            splitLine: {
+                lineStyle: {
+                    color: '#3a3f48'
+                }
+            }
+        },
+        yAxis: {
+            axisLine: {
+                lineStyle: {
+                    color: '#3a3f48'
+                }
+            },
+            axisLabel: {
+                color: '#a0a0a0'
+            },
+            splitLine: {
+                lineStyle: {
+                    color: '#3a3f48'
+                }
+            }
+        },
+        series: []
+    };
+    
+    // Inicializar el gráfico con el tema oscuro
+    trendChart = echarts.init(chartDom);
+    trendChart.setOption(darkTheme);
+    
+    // Actualizar el gráfico con los datos iniciales
+    actualizarGraficoTendencias();
+    
+    // Agregar listeners para los botones de período
+    document.querySelectorAll('.chartButton').forEach(button => {
+        button.addEventListener('click', function() {
+            // Remover la clase active de todos los botones
+            document.querySelectorAll('.chartButton').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Agregar la clase active al botón clickeado
+            this.classList.add('active');
+            
+            // Actualizar el período actual y actualizar el gráfico
+            currentPeriod = this.getAttribute('data-period');
+            actualizarGraficoTendencias();
+        });
+    });
+    
+    // Manejar el redimensionamiento
+    window.addEventListener('resize', function() {
+        trendChart.resize();
+    });
+}
+
+// Función para generar datos de ejemplo para el gráfico
+function generarDatosDePrueba() {
+    const now = new Date();
+    const datos = {
+        fechas: [],
+        presionUpstream: [],
+        presionDownstream: [],
+        minimoContractual: []
+    };
+    
+    let numPoints;
+    let intervalo;
+    
+    // Ajustar la cantidad de puntos e intervalo según el período seleccionado
+    switch (currentPeriod) {
+        case 'day':
+            numPoints = 24;
+            intervalo = 60 * 60 * 1000; // 1 hora en milisegundos
+            break;
+        case 'week':
+            numPoints = 7;
+            intervalo = 24 * 60 * 60 * 1000; // 1 día en milisegundos
+            break;
+        case 'month':
+            numPoints = 30;
+            intervalo = 24 * 60 * 60 * 1000; // 1 día en milisegundos
+            break;
+        default:
+            numPoints = 24;
+            intervalo = 60 * 60 * 1000;
+    }
+    
+    // Generar datos aleatorios para el gráfico
+    for (let i = 0; i < numPoints; i++) {
+        const fecha = new Date(now.getTime() - (numPoints - i) * intervalo);
+        datos.fechas.push(fecha.toLocaleString());
+        
+        // Presiones con variación realista
+        const baseUpstream = 45 + (Math.random() * 3) - 1.5;
+        datos.presionUpstream.push(baseUpstream);
+        
+        const baseDownstream = 40 + (Math.random() * 3) - 1.5;
+        datos.presionDownstream.push(baseDownstream);
+        
+        // Línea constante para el mínimo contractual
+        datos.minimoContractual.push(inputMinimoContractual);
+    }
+    
+    return datos;
+}
+
+// Actualizar el gráfico con nuevos datos
+function actualizarGraficoTendencias() {
+    if (!trendChart) return;
+    
+    // Obtener datos (en un escenario real, estos vendrían de la API o dataset)
+    const datos = generarDatosDePrueba();
+    
+    // Configuración del gráfico
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(42, 46, 53, 0.9)',
+            borderColor: '#3a3f48',
+            textStyle: {
+                color: '#e0e0e0'
+            },
+            axisPointer: {
+                type: 'cross',
+                label: {
+                    backgroundColor: '#6a7985'
+                }
+            }
+        },
+        legend: {
+            data: ['Presión Upstream', 'Presión Downstream', 'Mínimo Contractual'],
+            top: 'bottom'
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '60px',
+            top: '20px',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: datos.fechas
+        },
+        yAxis: {
+            type: 'value',
+            name: 'Presión (kg/cm²)',
+            nameLocation: 'middle',
+            nameGap: 50
+        },
+        series: [
+            {
+                name: 'Presión Upstream',
+                type: 'line',
+                data: datos.presionUpstream,
+                smooth: true,
+                lineStyle: {
+                    width: 3,
+                    color: '#ff8c00'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0,
+                            color: 'rgba(255, 140, 0, 0.5)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(255, 140, 0, 0.05)'
+                        }]
+                    }
+                }
+            },
+            {
+                name: 'Presión Downstream',
+                type: 'line',
+                data: datos.presionDownstream,
+                smooth: true,
+                lineStyle: {
+                    width: 3,
+                    color: '#4caf50'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0,
+                            color: 'rgba(76, 175, 80, 0.5)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(76, 175, 80, 0.05)'
+                        }]
+                    }
+                }
+            },
+            {
+                name: 'Mínimo Contractual',
+                type: 'line',
+                data: datos.minimoContractual,
+                symbol: 'none',
+                lineStyle: {
+                    width: 2,
+                    type: 'dashed',
+                    color: '#f44336'
+                }
+            }
+        ]
+    };
+    
+    // Aplicar la configuración al gráfico
+    trendChart.setOption(option);
+}
+
 // Inicializar la carga de datos
 document.addEventListener('DOMContentLoaded', function () {
     // Cargar los datos después de un pequeño delay
@@ -188,6 +449,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // setCurrentDateTimeAsDefault();
         setSpecificDateTimeAsDefault();
         actualizarValoresEnPantalla();
+        
+        // Inicializar el gráfico de tendencias
+        initTrendChart();
     }, 600);
 });
 
@@ -206,6 +470,86 @@ function initMap() {
     const map = new google.maps.Map(mapElement, {
         zoom: GOOGLE_MAPS_CONFIG.initialZoom,
         center: GOOGLE_MAPS_CONFIG.defaultCoords,
+        styles: [
+            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            {
+                featureType: "administrative.locality",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#d59563" }],
+            },
+            {
+                featureType: "poi",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#d59563" }],
+            },
+            {
+                featureType: "poi.park",
+                elementType: "geometry",
+                stylers: [{ color: "#263c3f" }],
+            },
+            {
+                featureType: "poi.park",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#6b9a76" }],
+            },
+            {
+                featureType: "road",
+                elementType: "geometry",
+                stylers: [{ color: "#38414e" }],
+            },
+            {
+                featureType: "road",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#212a37" }],
+            },
+            {
+                featureType: "road",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#9ca5b3" }],
+            },
+            {
+                featureType: "road.highway",
+                elementType: "geometry",
+                stylers: [{ color: "#746855" }],
+            },
+            {
+                featureType: "road.highway",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#1f2835" }],
+            },
+            {
+                featureType: "road.highway",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#f3d19c" }],
+            },
+            {
+                featureType: "transit",
+                elementType: "geometry",
+                stylers: [{ color: "#2f3948" }],
+            },
+            {
+                featureType: "transit.station",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#d59563" }],
+            },
+            {
+                featureType: "water",
+                elementType: "geometry",
+                stylers: [{ color: "#17263c" }],
+            },
+            {
+                featureType: "water",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#515c6d" }],
+            },
+            {
+                featureType: "water",
+                elementType: "labels.text.stroke",
+                stylers: [{ color: "#17263c" }],
+            },
+        ]
     });
 
     // Para mostrar información cuando se hace clic en un marcador

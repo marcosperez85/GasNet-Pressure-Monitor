@@ -5,80 +5,159 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel='stylesheet' type='text/css' media='screen' href='./style_landing.css'>
-    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Agregar ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <title>GasNet Pressure Monitor</title>
 </head>
 
 <body>
-    <!-- Contenedor general de toda el contenido de la página -->
-    <div id="contenedorGeneral">
-
-        <!-- Contenedor de los logos y título general -->
-        <div id="contenedorBannerConLogo">
-            <div id="tituloGeneral">Monitor de presión de gas</div>
+    <!-- Top navigation bar -->
+    <nav id="topNav">
+        <div class="navLeft">
+            <div class="logoContainer">
+                <i class="fas fa-gauge-high"></i>
+            </div>
+            <h1>Gas Pressure Monitor</h1>
+            <span class="subtitle">INDUSTRIAL PIPELINE MONITORING SYSTEM</span>
         </div>
+        <div class="navRight">
+            <button class="navButton active"><i class="fas fa-map"></i> Map View</button>
+            <button class="navButton"><i class="fas fa-chart-line"></i> Dashboard</button>
+            <button class="navButton"><i class="fas fa-robot"></i> AI Assistant</button>
+            <button class="navButton"><i class="fas fa-cog"></i> Settings</button>
+        </div>
+    </nav>
 
-        <!-- Contenedor de cada columna donde se alojan los distintos grupos de datos-->
-        <div id="contenedorColumnas">
-
-            <!-- Contenedor de columna 1 para Google Maps -->
-            <div id="columna1">
-                <div id="grupoColumna1" class="estiloGrupos estiloGrupoColumna1">
-                    <div id="map"></div>
+    <!-- Main content area with sidebar on LEFT -->
+    <div id="mainContent">
+        <!-- Left Sidebar for Pipeline Segments -->
+        <div class="sidebar">
+            <div class="sidebarHeader">
+                <h3>Pipeline Segments</h3>
+                <div class="segmentCount">328/450 segments | 12 critical | 8 warning</div>
+                <div class="segmentFilters">
+                    <button class="filterButton active">All</button>
+                    <button class="filterButton">Critical</button>
+                    <button class="filterButton">Warning</button>
+                    <button class="filterButton">Normal</button>
+                    <button class="filterButton">Inactive</button>
                 </div>
             </div>
-
-            <!-- Contenedor de columna 2 para datos Read Only -->
-            <div id="columna2">
-
-                <!-- Parámetros del VDF -->
-                <div id="grupoColumna2" class="estiloGrupos estiloGrupoColumna2">
-                    <label id="tituloColumna2" class="nombreDeGrupo estiloNegrita">Variables a monitorear:</label>
-
-                    <div class="filasColumna2">
-                        <!-- DateTime picker con label para mejor accesibilidad -->
-                        <label for="datetimePicker" class="labelReadOnly">Selecciona fecha y hora:</label>
-                        <input type="datetime-local" id="datetimePicker" class="estiloDateTimePicker">
-                    </div>
-
-                    <div class="filasColumna2">
-                        <div id="labelPresionDeEntradaUpstream" class="labelReadOnly">Presión de entrada:</div>
-                        <div id="presionDeEntradaUpstream" class="textValue">Preview</div>
-                    </div>
-
-                    <div class="filasColumna2">
-                        <div id="labelPresionDeEntradaDownstream" class="labelReadOnly">Presión de entrada downstream:
+            
+            <!-- List of pipeline segments -->
+            <div class="segmentList">
+                <div class="segmentItem">
+                    <div class="segmentTitle">Planta San Lorenzo</div>
+                    <div class="segmentSubtitle">Upstream</div>
+                    <div class="segmentMetrics">
+                        <div>
+                            <div class="metricLabel">Line Pack</div>
+                            <div class="metricValue">8.4 Sm3</div>
                         </div>
-                        <div id="presionDeEntradaDownstream" class="textValue">Preview</div>
+                        <div>
+                            <div class="metricLabel">Pressure</div>
+                            <div class="metricValue">52.7 bar</div>
+                        </div>
                     </div>
-
-                    <div class="filasColumna2">
-                        <div id="labelVariacionDePresion" class="labelReadOnly">Variacion en 48hs:</div>
-                        <div id="variacionDePresion" class="textValue">Preview</div>
-                    </div>
-
-                    <div class="filasColumna2">
-                        <div id="labelPresionFutura" class="labelReadOnly">Presión de entrada en 48hs:</div>
-                        <div id="presionFutura" class="textValue">Preview</div>
-                    </div>
-
-                    <div class="filasColumna2">
-                        <div id="labelMinimoContractual" class="labelReadOnly">Mínimo contractual:</div>
-                        <div id="minimoContractual" class="textValue">Preview</div>
-                    </div>
-
-                    <div class="filasColumna2">
-                        <div id="labelTiempoRestante" class="labelReadOnly">Tiempo restante para umbral:</div>
-                        <div id="tiempoRestante" class="textValue">Preview</div>
-                    </div>
-
-                    <button id="botonConsultarChatbot" class="botonChico">Consultar chatbot</button>
                 </div>
-
+                
+                <div class="segmentItem">
+                    <div class="segmentTitle">ERP Invernada L3</div>
+                    <div class="segmentSubtitle">Downstream</div>
+                    <div class="segmentMetrics">
+                        <div>
+                            <div class="metricLabel">Line Pack</div>
+                            <div class="metricValue">6.2 Sm3</div>
+                        </div>
+                        <div>
+                            <div class="metricLabel">Pressure</div>
+                            <div class="metricValue">38.5 bar</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="segmentItem">
+                    <div class="segmentTitle">PM 203 - El Chourron</div>
+                    <div class="segmentSubtitle">Connection</div>
+                    <div class="segmentMetrics">
+                        <div>
+                            <div class="metricLabel">Line Pack</div>
+                            <div class="metricValue">5.8 Sm3</div>
+                        </div>
+                        <div>
+                            <div class="metricLabel">Pressure</div>
+                            <div class="metricValue">42.8 bar</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+        
+        <!-- Map content on right -->
+        <div class="mapContent">
+            <!-- Map area -->
+            <div id="map" class="mapArea"></div>
 
+            <!-- Trends chart section -->
+            <div class="chartPanel">
+                <div class="chartHeader">
+                    <h4>Tendencia de Presión</h4>
+                    <div class="chartControls">
+                        <button class="chartButton active" data-period="day">Día</button>
+                        <button class="chartButton" data-period="week">Semana</button>
+                        <button class="chartButton" data-period="month">Mes</button>
+                    </div>
+                </div>
+                <div id="trendChart" class="chartContainer"></div>
+            </div>
+
+            <!-- Data panel below map -->
+            <div class="dataPanel">
+                <h4>Variables a monitorear:</h4>
+                
+                <div class="dataRow">
+                    <label for="datetimePicker" class="dataLabel">Selecciona fecha y hora:</label>
+                    <input type="datetime-local" id="datetimePicker" class="dataInput">
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelPresionDeEntradaUpstream" class="dataLabel">Presión de entrada:</div>
+                    <div id="presionDeEntradaUpstream" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelPresionDeEntradaDownstream" class="dataLabel">Presión de entrada downstream:</div>
+                    <div id="presionDeEntradaDownstream" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelVariacionDePresion" class="dataLabel">Variacion en 48hs:</div>
+                    <div id="variacionDePresion" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelPresionFutura" class="dataLabel">Presión de entrada en 48hs:</div>
+                    <div id="presionFutura" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelMinimoContractual" class="dataLabel">Mínimo contractual:</div>
+                    <div id="minimoContractual" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelTiempoRestante" class="dataLabel">Tiempo restante para umbral:</div>
+                    <div id="tiempoRestante" class="dataValue">Preview</div>
+                </div>
+                
+                <button id="botonConsultarChatbot" class="actionButton">
+                    <i class="fas fa-comments"></i> Consultar chatbot
+                </button>
+            </div>
+        </div>
     </div>
-    </div>
+
     <!-- Cargar primero el archivo de configuración -->
     <script src="./config.js"></script>
 
