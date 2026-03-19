@@ -8,6 +8,20 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     try:
+         # 👇 PRIMERO manejar preflight
+        if event.get("httpMethod") == "OPTIONS":
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
+                    'Access-Control-Allow-Methods': 'POST,OPTIONS'
+                },
+                'body': ''
+            }
+
+        # 👇 DESPUÉS tu lógica normal
+        
         # Parsear el cuerpo de la request
         if 'body' in event:
             body = json.loads(event['body'])
@@ -22,7 +36,7 @@ def lambda_handler(event, context):
                 'headers': {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
                     'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
                 'body': json.dumps({'error': 'Query is required'})
@@ -56,10 +70,12 @@ def lambda_handler(event, context):
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
-            'body': bot_response
+            'body': json.dumps({
+                'response': bot_response
+            })
         }
         
     except Exception as e:
@@ -69,7 +85,7 @@ def lambda_handler(event, context):
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Headers': 'Content-Type,x-api-key',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
             'body': json.dumps({'error': 'Internal server error'})
