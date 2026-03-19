@@ -1,13 +1,22 @@
+# =====================================================
+# REST API
+# =====================================================
 resource "aws_api_gateway_rest_api" "api" {
   name = "ophub-chatbot-api"
 }
 
+# =====================================================
+# RESOURCE: /chat
+# =====================================================
 resource "aws_api_gateway_resource" "chat" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
   path_part   = "chat"
 }
 
+# =====================================================
+# METHOD: POST
+# =====================================================
 resource "aws_api_gateway_method" "post" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.chat.id
@@ -17,10 +26,9 @@ resource "aws_api_gateway_method" "post" {
   api_key_required = true
 }
 
-###########################################################################
-
-# Integracion con Lambda
-
+# =====================================================
+# INTEGRATION: POST → Lambda
+# =====================================================
 resource "aws_api_gateway_integration" "lambda" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.chat.id
@@ -31,47 +39,95 @@ resource "aws_api_gateway_integration" "lambda" {
   uri                     = aws_lambda_function.chatbot.invoke_arn
 }
 
-###########################################################################
+# =====================================================
+# METHOD: OPTIONS (CORS)
+# =====================================================
+resource "aws_api_gateway_method" "options" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.chat.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
 
-# Stage dev/prod
-
-resource "aws_api_gateway_deployment" "deployment" {
-  depends_on = [aws_api_gateway_integration.lambda]
-
+# =====================================================
+# INTEGRATION: OPTIONS (MOCK)
+# =====================================================
+resource "aws_api_gateway_integration" "options" {
   rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.chat.id
+  http_method = aws_api_gateway_method.options.http_method
 
-  triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.api))
+  type = "MOCK"
+
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
   }
 }
 
+# =====================================================
+# METHOD RESPONSE: OPTIONS (CORS)
+# =====================================================
+resource "aws_api_gateway_method_response" "options" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.chat.id
+  http_method = aws_api_gateway_method.options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+# =====================================================
+# INTEGRATION RESPONSE: OPTIONS (CORS)
+# =====================================================
+resource "aws_api_gateway_integration_response" "options" {
+  depends_on = [
+    aws_api_gateway_integration.options
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.chat.id
+  http_method = aws_api_gateway_method.options.http_method
+  status_code = "200"
+  
+  response_templates = {
+    "application/json" = ""
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-api-key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+# =====================================================
+# DEPLOYMENT
+# =====================================================
+resource "aws_api_gateway_deployment" "deployment" {
+  depends_on = [
+    aws_api_gateway_integration.lambda,
+    aws_api_gateway_integration.options
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.api.id
+
+triggers = {
+  redeployment = timestamp()
+}
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# =====================================================
+# STAGE: DEV
+# =====================================================
 resource "aws_api_gateway_stage" "dev" {
   stage_name    = "dev"
   rest_api_id   = aws_api_gateway_rest_api.api.id
   deployment_id = aws_api_gateway_deployment.deployment.id
-}
-
-###########################################################################
-
-# Restriccion por IP 
-
-resource "aws_api_gateway_rest_api_policy" "policy" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect    = "Allow",
-        Principal = "*",
-        Action    = "execute-api:Invoke",
-        Resource  = "*",
-        Condition = {
-          IpAddress = {
-            "aws:SourceIp" = ["0.0.0.0/0"]
-          }
-        }
-      }
-    ]
-  })
 }
