@@ -45,25 +45,26 @@ def lambda_handler(event, context):
         # Cliente de Bedrock
         bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
         
-        # Configuración para Llama3
-        prompt = f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n"
-        
         body_params = {
-            "prompt": prompt,
-            "max_gen_len": 1000,
-            "temperature": 0.7,
-            "top_p": 0.9
+            "anthropic_version": "bedrock-2023-05-31",
+            "system": "You are an industrial assistant specialized in operations, calculations, and process optimization. Be precise, concise, and avoid unnecessary explanations. Always respond in Spanish. Use clear structured answers.",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": query
+                }
+            ],
+            "max_tokens": 1000,
+            "temperature": 0.7
         }
-        
-        # Llamada a Bedrock con Llama3
+
         response = bedrock.invoke_model(
-            modelId='meta.llama3-8b-instruct-v1:0',
+            modelId='us.anthropic.claude-3-7-sonnet-20250219-v1:0',
             body=json.dumps(body_params)
         )
-        
-        # Procesar respuesta de Llama3
+
         response_body = json.loads(response['body'].read())
-        bot_response = response_body['generation']
+        bot_response = response_body['content'][0]['text']
         
         return {
             'statusCode': 200,
