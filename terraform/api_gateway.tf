@@ -131,3 +131,46 @@ resource "aws_api_gateway_stage" "dev" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   deployment_id = aws_api_gateway_deployment.deployment.id
 }
+
+
+# =====================================================
+# API GATEWAY RESPONSES
+# =====================================================
+
+resource "aws_api_gateway_gateway_response" "default_4xx" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,x-api-key'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default_5xx" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,x-api-key'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+  }
+}
+
+# =====================================================
+# ACTIVAR LOGS PARA API GATEWAY
+# =====================================================
+
+resource "aws_api_gateway_method_settings" "settings" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = aws_api_gateway_stage.dev.stage_name
+  method_path = "*/*"
+
+  settings {
+    logging_level = "INFO"
+    data_trace_enabled = true
+    metrics_enabled = true
+  }
+}
