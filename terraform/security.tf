@@ -71,3 +71,14 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 }
 
 ###########################################################################
+
+# Alojamiento del Terraform State
+
+terraform {
+  backend "s3" {
+    bucket         = "terraform-state-mdp"
+    key            = "bedrock-app/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock"
+  }
+}
