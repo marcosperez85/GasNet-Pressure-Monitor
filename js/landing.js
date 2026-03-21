@@ -624,7 +624,7 @@ function setupNavigation() {
     // Agregar event listeners para los botones de navegación
     document.querySelectorAll('.navButton').forEach(button => {
         button.addEventListener('click', function() {
-            if (this.textContent.includes('AI Assistant')) {
+            if (this.textContent.includes('Camu Bot')) {
                 window.location.href = './chatbot/index.html';
             }
             // Aquí se pueden agregar más navegaciones para otros botones si es necesario
