@@ -98,6 +98,6 @@ $cuadroParaUserInput.addEventListener('keypress', function (e) {
 // Mensaje de bienvenida al cargar la página
 document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => {
-        $chatBox.innerHTML += `<p><strong>Chatbot:</strong> ¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?</p>`;
+        $chatBox.innerHTML += `<p><strong>Camu Bot:</strong> ¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?</p>`;
     }, 500);
 });
