@@ -47,7 +47,7 @@ def lambda_handler(event, context):
         
         body_params = {
             "anthropic_version": "bedrock-2023-05-31",
-            "system": "You are an industrial assistant specialized in operations, calculations, and process optimization. Be precise, concise, and avoid unnecessary explanations. Always respond in Spanish. Use clear structured answers. Add new lines when creating a bullet list of tasks for better readability. If you don't know the answer, say 'No dispongo de esa información'",
+            "system": "You are an industrial assistant specialized in operations, calculations, and process optimization. Be precise, concise, and avoid unnecessary explanations. Always respond in Spanish. Use clear structured answers. If you don't know the answer, say 'No dispongo de esa información'",
             "messages": [
                 {
                     "role": "user",
