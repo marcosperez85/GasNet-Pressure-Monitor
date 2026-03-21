@@ -190,27 +190,48 @@ h1 {
 }
 
 /* Mensajes del usuario */
-#chat-box p:has(strong:contains("Tú")) {
+.user-message {
     background-color: var(--primary-color);
     color: var(--panel-background);
-    margin-left: auto;
+    border-bottom-right-radius: 4px !important;
+    max-width: 80% !important;
+    width: auto !important;
+    float: right !important;
+    clear: both !important;
     text-align: right;
-    border-bottom-right-radius: 4px;
 }
 
 /* Mensajes del chatbot */
-#chat-box p:has(strong:contains("Chatbot")) {
+.bot-message {
     background-color: var(--card-background);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-bottom-left-radius: 4px;
+    max-width: 80% !important;
+    float: left !important;
+    clear: both !important;
+    text-align: left;
 }
 
 /* Mensajes de error */
-#chat-box p:has(strong:contains("Error")) {
+.error-message {
     background-color: rgba(244, 67, 54, 0.2);
     color: var(--danger-color);
     border: 1px solid var(--danger-color);
+    margin: 0 auto !important;
+    text-align: center;
+    max-width: 80% !important;
+}
+
+/* Mensaje de carga del bot (spinner) */
+.bot-loading {
+    background-color: transparent;
+    color: var(--light-text);
+    float: left !important;
+    clear: both !important;
+    text-align: left;
+    max-width: 80% !important;
+    width: auto !important;
 }
 
 .input-container {

@@ -30,12 +30,13 @@ async function sendMessage() {
 
     $cuadroParaUserInput.value = "";
 
-    $chatBox.innerHTML += `<p><strong>Tú:</strong> ${textoDelUsuario}</p>`;
+    // Añadir la clase 'user-message' para facilitar el estilizado
+    $chatBox.innerHTML += `<p class="user-message"><strong>Tú:</strong> ${textoDelUsuario}</p>`;
     $chatBox.scrollTop = $chatBox.scrollHeight;
 
     // Mostrar indicador de carga
     const loadingId = `loading-${Date.now()}`;
-    $chatBox.innerHTML += `<p id="${loadingId}"><em><i class="fas fa-spinner fa-spin"></i> Escribiendo...</em></p>`;
+    $chatBox.innerHTML += `<p id="${loadingId}" class="bot-loading"><em><i class="fas fa-spinner fa-spin"></i> Escribiendo...</em></p>`;
     $chatBox.scrollTop = $chatBox.scrollHeight;
 
     try {
@@ -59,21 +60,27 @@ async function sendMessage() {
             try {
                 const jsonResponse = JSON.parse(textResponse);
 
-                // Si es un objeto con campo response, usar ese valor
+                // Función para preservar saltos de línea y formatear texto
+                function formatText(text) {
+                    // Reemplazar saltos de línea con <br> para HTML
+                    return text.replace(/\n/g, '<br>');
+                }
+
+                // Añadir la clase 'bot-message' para facilitar el estilizado
                 if (jsonResponse && typeof jsonResponse === 'object' && jsonResponse.response) {
-                    $chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${jsonResponse.response}</p>`;
+                    $chatBox.innerHTML += `<p class="bot-message"><strong>Camu Bot:</strong> ${formatText(jsonResponse.response)}</p>`;
                 } else if (jsonResponse && typeof jsonResponse === 'object' && jsonResponse.body) {
-                    $chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${jsonResponse.body}</p>`;
+                    $chatBox.innerHTML += `<p class="bot-message"><strong>Camu Bot:</strong> ${formatText(jsonResponse.body)}</p>`;
                 } else {
                     // Si es JSON pero sin body o response, mostrar como texto
-                    $chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${textResponse}</p>`;
+                    $chatBox.innerHTML += `<p class="bot-message"><strong>Camu Bot:</strong> ${formatText(textResponse)}</p>`;
                 }
             } catch (e) {
                 // Si no es JSON válido, mostrar el texto directamente
-                $chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${textResponse}</p>`;
+                $chatBox.innerHTML += `<p class="bot-message"><strong>Camu Bot:</strong> ${textResponse.replace(/\n/g, '<br>')}</p>`;
             }
         } else {
-            $chatBox.innerHTML += `<p><strong>Error:</strong> No se pudo obtener respuesta</p>`;
+            $chatBox.innerHTML += `<p class="error-message"><strong>Error:</strong> No se pudo obtener respuesta</p>`;
         }
 
         $chatBox.scrollTop = $chatBox.scrollHeight;
@@ -84,7 +91,7 @@ async function sendMessage() {
         if (document.getElementById(loadingId)) {
             document.getElementById(loadingId).remove();
         }
-        $chatBox.innerHTML += `<p><strong>Error:</strong> No se pudo conectar con el chatbot</p>`;
+        $chatBox.innerHTML += `<p class="error-message"><strong>Error:</strong> No se pudo conectar con el chatbot</p>`;
         $chatBox.scrollTop = $chatBox.scrollHeight;
     }
 }
@@ -98,6 +105,6 @@ $cuadroParaUserInput.addEventListener('keypress', function (e) {
 // Mensaje de bienvenida al cargar la página
 document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => {
-        $chatBox.innerHTML += `<p><strong>Camu Bot:</strong> ¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?</p>`;
+        $chatBox.innerHTML += `<p class="bot-message"><strong>Camu Bot:</strong> ¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?</p>`;
     }, 500);
 });
