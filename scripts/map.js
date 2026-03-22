@@ -100,7 +100,7 @@ function initMap() {
     // Create an info window to share between markers
     const infoWindow = new google.maps.InfoWindow();
 
-    locations.forEach(loc => {
+    $.each(locations, function (i, loc) {
         const marker = new google.maps.Marker({
             position: { lat: loc.lat, lng: loc.lng },
             map: map,
@@ -117,23 +117,22 @@ function initMap() {
             updateMeasurementPoints(loc.title);
 
             // Highlight the corresponding zone segment in the sidebar
-            document.querySelectorAll('.zoneSegment').forEach(seg => {
-                if (seg.textContent.trim() === loc.title) {
-                    document.querySelectorAll('.zoneSegment').forEach(s => s.classList.remove('active'));
-                    seg.classList.add('active');
+            $('.zoneSegment').each(function () {
+                if ($(this).text().trim() === loc.title) {
+                    $('.zoneSegment').removeClass('active');
+                    $(this).addClass('active');
 
                     // Ensure parent is expanded
-                    const parent = seg.closest('.zoneSegments');
-                    if (parent && !parent.classList.contains('active')) {
-                        parent.classList.add('active');
+                    const $parent = $(this).closest('.zoneSegments');
+                    if ($parent.length && !$parent.hasClass('active')) {
+                        $parent.addClass('active');
 
                         // Update the chevron icon
-                        const button = parent.previousElementSibling;
-                        if (button) {
-                            const icon = button.querySelector('i');
-                            if (icon) {
-                                icon.classList.remove('fa-chevron-down');
-                                icon.classList.add('fa-chevron-up');
+                        const $button = $parent.prev();
+                        if ($button.length) {
+                            const $icon = $button.find('i');
+                            if ($icon.length) {
+                                $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
                             }
                         }
                     }
@@ -144,9 +143,16 @@ function initMap() {
 }
 
 function loadMap() {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&callback=initMap`;
-    script.async = true;
+
+    // Defensive check to ensure API key exists
+    if (!GOOGLE_MAPS_API_KEY) {
+        console.error('Cannot load Google Maps: API key is not available');
+        return;
+    }
+
+    const script = $('<script></script>');
+    script.attr('src', `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap`);
+    script.attr('async', true);
     window.initMap = initMap;
-    document.head.appendChild(script);
+    $('head').append(script);
 }
