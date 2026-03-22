@@ -1,0 +1,24 @@
+{
+  "name": "gasnet-pressure-monitor",
+  "version": "1.0.0",
+  "description": "Un dashboard web para monitorear y predecir presiones en redes de gas, integrando datos y visualizaciones geoespaciales con capacidades de consulta mediante lenguaje natural a través de un chatbot.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "watch": "webpack --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "babel-loader": "^10.1.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^14.0.0",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^7.0.2",
+    "zip-webpack-plugin": "^4.0.3"
+  }
+}
