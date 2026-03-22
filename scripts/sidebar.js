@@ -1,8 +1,7 @@
 function createSegmentItem(point) {
-    const item = document.createElement('div');
-    item.className = 'segmentItem';
+    const $item = $('<div></div>').addClass('segmentItem');
 
-    item.innerHTML = `
+    $item.html(`
         <div class="segmentTitle">${point.title}</div>
         <div class="segmentSubtitle">${point.subtitle}</div>
         <div class="segmentMetrics">
@@ -15,47 +14,45 @@ function createSegmentItem(point) {
                 <div class="metricValue">${point.pressure}</div>
             </div>
         </div>
-    `;
+    `);
 
-    setTimeout(() => item.style.opacity = 1, 50);
-    return item;
+    setTimeout(() => $item.css('opacity', 1), 50);
+    return $item[0];
 }
 
 function updateMeasurementPoints(unit) {
-    if (MEASUREMENT_POINTS[unit]) {
-        DOM.noSelection.classList.add('hidden');
-        DOM.segmentList.classList.remove('hidden');
-        DOM.segmentList.innerHTML = '';
+     if (MEASUREMENT_POINTS[unit]) {
+        $(DOM.noSelection).addClass('hidden');
+        $(DOM.segmentList).removeClass('hidden');
+        $(DOM.segmentList).empty();
 
-        MEASUREMENT_POINTS[unit].forEach(p => {
-            DOM.segmentList.appendChild(createSegmentItem(p));
+        $.each(MEASUREMENT_POINTS[unit], function(i, p) {
+            $(DOM.segmentList).append(createSegmentItem(p));
         });
     } else {
-        DOM.noSelection.classList.remove('hidden');
-        DOM.segmentList.classList.add('hidden');
+        $(DOM.noSelection).removeClass('hidden');
+        $(DOM.segmentList).addClass('hidden');
     }
 }
 
 function setupDistributionZones() {
-    const pampeanaButton = document.getElementById('camuzziGasPampeana');
-    const surButton = document.getElementById('camuzziGasDelSur');
-    const pampeanaSegments = document.querySelector('.pampeana-segments');
-    const surSegments = document.querySelector('.sur-segments');
+    const $pampeanaButton = $('#camuzziGasPampeana');
+    const $surButton = $('#camuzziGasDelSur');
+    const $pampeanaSegments = $('.pampeana-segments');
+    const $surSegments = $('.sur-segments');
 
-    pampeanaButton?.addEventListener('click', () => {
-        pampeanaSegments.classList.toggle('active');
+    $pampeanaButton.on('click', function() {
+        $pampeanaSegments.toggleClass('active');
     });
 
-    surButton?.addEventListener('click', () => {
-        surSegments.classList.toggle('active');
+    $surButton.on('click', function() {
+        $surSegments.toggleClass('active');
     });
 
-    document.querySelectorAll('.zoneSegment').forEach(seg => {
-        seg.addEventListener('click', function () {
-            document.querySelectorAll('.zoneSegment').forEach(s => s.classList.remove('active'));
-            this.classList.add('active');
+    $('.zoneSegment').on('click', function() {
+        $('.zoneSegment').removeClass('active');
+        $(this).addClass('active');
 
-            updateMeasurementPoints(this.textContent.trim());
-        });
+        updateMeasurementPoints($(this).text().trim());
     });
 }
