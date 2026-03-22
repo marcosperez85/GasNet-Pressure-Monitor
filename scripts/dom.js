@@ -1,6 +1,6 @@
 const DOM = {
-    segmentList: document.getElementById('segmentList'),
-    noSelection: document.getElementById('noSelectionMessage'),
-    chart: document.getElementById('trendChart'),
-    map: document.getElementById('map')
+    segmentList: $('#segmentList')[0],
+    noSelection: $('#noSelectionMessage')[0],
+    chart: $('#trendChart')[0],
+    map: $('#map')[0]
 };
