@@ -24,7 +24,7 @@
         <div class="navRight">
             <button class="navButton active"><i class="fas fa-map"></i> Map View</button>
             <button class="navButton"><i class="fas fa-chart-line"></i> Dashboard</button>
-            <button class="navButton"><i class="fas fa-robot"></i> Camu</button>
+            <button class="navButton"><i class="fas fa-robot"></i> Camu Bot</button>
             <button class="navButton"><i class="fas fa-cog"></i> Settings</button>
         </div>
     </nav>
@@ -36,7 +36,7 @@
             <div class="sidebarHeader">
                 <h3>Distribuidoras</h3>
             </div>
-            
+
             <!-- Distribution Zone Buttons -->
             <div class="distributionZones">
                 <div class="distributionButton" id="camuzziGasPampeana">
@@ -52,7 +52,7 @@
                     <div class="zoneSegment">La Plata</div>
                     <div class="zoneSegment">Mar del Plata</div>
                 </div>
-                
+
                 <div class="distributionButton" id="camuzziGasDelSur">
                     <div class="zoneName">Camuzzi Gas del Sur</div>
                     <i class="fas fa-chevron-down"></i>
@@ -69,7 +69,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Map content in center -->
         <div class="mapContent">
             <!-- Map area -->
@@ -91,106 +91,68 @@
             <!-- Data panel below map -->
             <div class="dataPanel">
                 <h4>Variables a monitorear:</h4>
-                
+
                 <div class="dataRow">
                     <label for="datetimePicker" class="dataLabel">Selecciona fecha y hora:</label>
                     <input type="datetime-local" id="datetimePicker" class="dataInput">
                 </div>
-                
+
                 <div class="dataRow">
                     <div id="labelPresionDeEntradaUpstream" class="dataLabel">Presión de entrada:</div>
                     <div id="presionDeEntradaUpstream" class="dataValue">Preview</div>
                 </div>
-                
+
                 <div class="dataRow">
                     <div id="labelPresionDeEntradaDownstream" class="dataLabel">Presión de entrada downstream:</div>
                     <div id="presionDeEntradaDownstream" class="dataValue">Preview</div>
                 </div>
-                
+
                 <div class="dataRow">
                     <div id="labelVariacionDePresion" class="dataLabel">Variacion en 48hs:</div>
                     <div id="variacionDePresion" class="dataValue">Preview</div>
                 </div>
-                
+
                 <div class="dataRow">
                     <div id="labelPresionFutura" class="dataLabel">Presión de entrada en 48hs:</div>
                     <div id="presionFutura" class="dataValue">Preview</div>
                 </div>
-                
+
                 <div class="dataRow">
                     <div id="labelMinimoContractual" class="dataLabel">Mínimo contractual:</div>
                     <div id="minimoContractual" class="dataValue">Preview</div>
                 </div>
-                
+
                 <div class="dataRow">
                     <div id="labelTiempoRestante" class="dataLabel">Tiempo restante para umbral:</div>
                     <div id="tiempoRestante" class="dataValue">Preview</div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Right Sidebar for Pipeline Segments -->
         <div class="rightSidebar">
             <div class="sidebarHeader">
-                <h3>Pipeline Segments</h3>
-                <div class="segmentCount">328/450 segments | 12 critical | 8 warning</div>
-                <div class="segmentFilters">
-                    <button class="filterButton active">All</button>
-                    <button class="filterButton">Critical</button>
-                    <button class="filterButton">Warning</button>
-                    <button class="filterButton">Normal</button>
-                    <button class="filterButton">Inactive</button>
+                <h3>Puntos de Medición</h3>
+                <div class="segmentCount">Sistema de Monitoreo de Presiones</div>
+            </div>
+
+            <!-- Initial message when no selection has been made -->
+            <div id="noSelectionMessage" class="noSelectionMessage">
+                <div class="messageIcon">
+                    <i class="fas fa-hand-pointer"></i>
+                </div>
+                <div class="messageText">
+                    Seleccione una Distribuidora y una Unidad de Negocio para ver los puntos de medición
                 </div>
             </div>
-            
-            <!-- List of pipeline segments -->
-            <div class="segmentList">
-                <div class="segmentItem">
-                    <div class="segmentTitle">Planta San Lorenzo</div>
-                    <div class="segmentSubtitle">Upstream</div>
-                    <div class="segmentMetrics">
-                        <div>
-                            <div class="metricLabel">Line Pack</div>
-                            <div class="metricValue">8.4 Sm3</div>
-                        </div>
-                        <div>
-                            <div class="metricLabel">Pressure</div>
-                            <div class="metricValue">52.7 bar</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="segmentItem">
-                    <div class="segmentTitle">ERP Invernada L3</div>
-                    <div class="segmentSubtitle">Downstream</div>
-                    <div class="segmentMetrics">
-                        <div>
-                            <div class="metricLabel">Line Pack</div>
-                            <div class="metricValue">6.2 Sm3</div>
-                        </div>
-                        <div>
-                            <div class="metricLabel">Pressure</div>
-                            <div class="metricValue">38.5 bar</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="segmentItem">
-                    <div class="segmentTitle">PM 203 - El Chourron</div>
-                    <div class="segmentSubtitle">Connection</div>
-                    <div class="segmentMetrics">
-                        <div>
-                            <div class="metricLabel">Line Pack</div>
-                            <div class="metricValue">5.8 Sm3</div>
-                        </div>
-                        <div>
-                            <div class="metricLabel">Pressure</div>
-                            <div class="metricValue">42.8 bar</div>
-                        </div>
-                    </div>
-                </div>
+
+            <!-- List of pipeline segments (initially empty) -->
+            <div id="segmentList" class="segmentList hidden">
+                <!-- Segments will be added dynamically -->
             </div>
         </div>
+
+
     </div>
 
     <!-- Cargar primero el archivo de configuración -->

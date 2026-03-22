@@ -1,727 +1,414 @@
+// =========================
+// CONFIG
+// =========================
 if (typeof CONFIG === 'undefined' || !CONFIG.GOOGLE_MAPS_API_KEY) {
-    console.error('Error: Archivo config.js no encontrado o API key no definida.');
-    alert('Este sitio requiere un archivo de configuración válido. Por favor, crea config.js siguiendo el modelo en config.template.js');
+    console.error('Falta config.js');
+    alert('Falta config.js');
 }
 
-const apiKey = CONFIG.GOOGLE_MAPS_API_KEY;
-
-// URL donde está alojado el JSON de datos (puede ser un bucket S3 o ruta local)
 const DATA_URL = './data/dataset_2022-2025.json';
 
-// Variable global para almacenar los datos cargados
-let datasetCompleto = [];
+// =========================
+// STATE
+// =========================
+const AppState = {
+    dataset: [],
+    selectedDateTime: null,
+    minimoContractual: 42,
+    trendChart: null,
+    currentPeriod: 'day'
+};
 
-// Cargar datos JSON al iniciar
-async function cargarDatos() {
-    try {
-        const response = await fetch(DATA_URL);
-        if (!response.ok) {
-            throw new Error('Error al cargar datos');
-        }
-        datasetCompleto = await response.json();
-        console.log('Datos cargados correctamente:', datasetCompleto.length, 'registros');
-    } catch (error) {
-        console.error('Error cargando datos:', error);
-        alert('No se pudieron cargar los datos. Por favor, verifica la conexión e intenta de nuevo.');
-    }
-}
+// =========================
+// DOM CACHE
+// =========================
+const DOM = {
+    datetimePicker: document.getElementById("datetimePicker"),
+    presionUpstream: document.getElementById("presionDeEntradaUpstream"),
+    presionDownstream: document.getElementById("presionDeEntradaDownstream"),
+    variacion: document.getElementById("variacionDePresion"),
+    presionFutura: document.getElementById("presionFutura"),
+    minimo: document.getElementById("minimoContractual"),
+    tiempoRestante: document.getElementById("tiempoRestante"),
 
-// ***** CONFIGURACIÓN DE GOOGLE MAPS *****
-const GOOGLE_MAPS_CONFIG = {
-    apiKey: apiKey,
-    defaultCoords: { lat: -37.354692, lng: -59.093802 },
-    initialZoom: 8,
-    // Array de ubicaciones con información adicional
-    locations: [
-        {
-            id: 1,
-            position: { lat: -36.860255, lng: -59.901936 },
-            title: 'PM 203 - El Chourron',
-            info: 'Este es el punto principal',
-            icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' // Opcional: icono personalizado
-        },
-        {
-            id: 2,
-            position: { lat: -37.354692, lng: -59.093802 },
-            title: 'ERP Invernada L3',
-            info: 'Este es un punto secundario',
-            icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-        },
-        {
-            id: 3,
-            position: { lat: -38.006102, lng: -57.551951 },
-            title: 'Mar del Plata',
-            info: 'Este es un punto secundario',
-            icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
-        }
+    segmentList: document.getElementById('segmentList'),
+    noSelection: document.getElementById('noSelectionMessage'),
+
+    chart: document.getElementById('trendChart'),
+    map: document.getElementById('map')
+};
+
+// =========================
+// DATA
+// =========================
+const MEASUREMENT_POINTS = {
+    'Mar del Plata': [
+        { title: 'Sistema Tandil - MDP', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
+        { title: 'Sistema de la Costa', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
+        { title: 'Sistema Balcarce', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' },
+        { title: 'Sistema MDP Ciudad', subtitle: 'Distribución urbana', linepack: '6.4 Sm3', pressure: '44.1 bar' }
     ]
 };
 
-const $contenedorBannerSuperior = document.getElementById("contenedorBannerSuperior");
-const $contenedorColumnas = document.getElementById("contenedorColumnas");
-
-// Lista de variables
-const $datetimePicker = document.getElementById("datetimePicker");
-const $presionDeEntradaUpstream = document.getElementById("presionDeEntradaUpstream");
-const $presionDeEntradaDownstream = document.getElementById("presionDeEntradaDownstream");
-const $variacionDePresion = document.getElementById("variacionDePresion");
-const $presionFutura = document.getElementById("presionFutura");
-const $minimoContractual = document.getElementById("minimoContractual");
-const $tiempoRestante = document.getElementById("tiempoRestante");
-
-let inputMinimoContractual = 42;
-let selectedDateTime;
-let formattedDateTime;
-
-// Cargar fecha y hora actual
-// setCurrentDateTimeAsDefault();
-
-// Cargar fecha y hora predefinidos
-setSpecificDateTimeAsDefault();
-
-// ***** FUNCIONES PARA MOSTRAR VALORES EN PANTALLA *****
-
-// Mostrar en pantalla el valor de la variable global del mínimo contractual
-$minimoContractual.textContent = inputMinimoContractual;
-console.log("El minimo contractual es: " + inputMinimoContractual);
-
-// Buscar datos según la fecha seleccionada
-function buscarDatosPorFecha() {
-    if (!selectedDateTime || datasetCompleto.length === 0) {
-        console.warn('No hay fecha seleccionada o datos cargados');
-        return null;
-    }
-
-    // Convertir a formato ISO para comparar con el dataset
-    const fechaSeleccionada = new Date(selectedDateTime).toISOString();
-    
-    // Buscar el registro más cercano a la fecha seleccionada
-    let registroMasCercano = null;
-    let menorDiferencia = Infinity;
-    
-    for (const registro of datasetCompleto) {
-        const fechaRegistro = new Date(registro.timestamp);
-        const diferencia = Math.abs(new Date(fechaSeleccionada) - fechaRegistro);
-        
-        if (diferencia < menorDiferencia) {
-            menorDiferencia = diferencia;
-            registroMasCercano = registro;
-        }
-    }
-    
-    return registroMasCercano;
+// =========================
+// DATA LOAD
+// =========================
+async function cargarDatos() {
+    const res = await fetch(DATA_URL);
+    AppState.dataset = await res.json();
 }
 
-// Actualizar todos los valores en pantalla
-function actualizarValoresEnPantalla() {
-    const datos = buscarDatosPorFecha();
-    
-    if (!datos) {
-        // Si no hay datos, mostrar mensaje en los campos
-        $presionDeEntradaUpstream.textContent = "No disponible";
-        $presionDeEntradaDownstream.textContent = "No disponible";
-        $variacionDePresion.textContent = "No disponible";
-        $presionFutura.textContent = "No disponible";
-        $tiempoRestante.textContent = "No disponible";
-        return;
-    }
-    
-    // Convertir valores a números y formatear con 2 decimales
-    const presionUpstream = parseFloat(datos.upstream_point.value).toFixed(2);
-    const presionDownstream = parseFloat(datos.downstream_point.value).toFixed(2);
-    const variacion = parseFloat(datos.prediction.value).toFixed(2);
-    
-    // Calcular presión futura (presión actual + predicción)
-    const presionFuturaCalculada = (parseFloat(presionUpstream) + parseFloat(variacion)).toFixed(2);
-    
-    $presionDeEntradaUpstream.textContent = presionUpstream + " kg/cm²";
-    $presionDeEntradaDownstream.textContent = presionDownstream + " kg/cm²";
-    $variacionDePresion.textContent = variacion + " kg/cm²";
-    $presionFutura.textContent = presionFuturaCalculada + " kg/cm²";
-    
-    // Calcular tiempo restante para llegar al mínimo contractual
-    calcularTiempoRestanteParaUmbral(presionUpstream, variacion);
-    
-    // Actualizar el gráfico de tendencias con los nuevos datos
-    actualizarGraficoTendencias();
+// =========================
+// SIDEBAR
+// =========================
+function createSegmentItem(point) {
+    const item = document.createElement('div');
+    item.className = 'segmentItem';
+
+    const title = document.createElement('div');
+    title.className = 'segmentTitle';
+    title.textContent = point.title;
+
+    const subtitle = document.createElement('div');
+    subtitle.className = 'segmentSubtitle';
+    subtitle.textContent = point.subtitle;
+
+    const metrics = document.createElement('div');
+    metrics.className = 'segmentMetrics';
+
+    const lp = document.createElement('div');
+    lp.innerHTML = `<div class="metricLabel">Line Pack</div><div class="metricValue">${point.linepack}</div>`;
+
+    const pr = document.createElement('div');
+    pr.innerHTML = `<div class="metricLabel">Pressure</div><div class="metricValue">${point.pressure}</div>`;
+
+    metrics.append(lp, pr);
+    item.append(title, subtitle, metrics);
+
+    setTimeout(() => item.style.opacity = 1, 50);
+
+    return item;
 }
 
-// Función para calcular el tiempo hasta llegar al mínimo contractual
-function calcularTiempoRestanteParaUmbral(presionActual, variacion) {
-    presionActual = parseFloat(presionActual);
-    variacion = parseFloat(variacion);
-    
-    // Si no hay variación o es positiva, no hay peligro
-    if (variacion >= 0 || isNaN(variacion)) {
-        $tiempoRestante.textContent = "No hay riesgo";
-        $tiempoRestante.className = "textValue";
-        return;
-    }
-    
-    // Calcular horas hasta llegar al mínimo contractual
-    const diferencia = presionActual - inputMinimoContractual;
-    const horasHastaUmbral = Math.abs(diferencia / variacion) * 48; // Variación es por 48h
-    
-    // Si ya estamos por debajo del mínimo
-    if (presionActual < inputMinimoContractual) {
-        $tiempoRestante.textContent = "¡Ya por debajo del mínimo!";
-        $tiempoRestante.className = "textValue textoAlerta";
-        return;
-    }
-    
-    // Formatear el resultado
-    if (horasHastaUmbral > 72) {
-        const dias = Math.floor(horasHastaUmbral / 24);
-        $tiempoRestante.textContent = `${dias} días`;
-        $tiempoRestante.className = "textValue";
+function updateMeasurementPoints(unit) {
+    if (MEASUREMENT_POINTS[unit]) {
+        DOM.noSelection.classList.add('hidden');
+        DOM.segmentList.classList.remove('hidden');
+        DOM.segmentList.innerHTML = '';
+
+        MEASUREMENT_POINTS[unit].forEach(p => {
+            DOM.segmentList.appendChild(createSegmentItem(p));
+        });
     } else {
-        $tiempoRestante.textContent = `${Math.floor(horasHastaUmbral)} horas`;
-        $tiempoRestante.className = horasHastaUmbral < 24 ? "textValue textoAlerta" : "textValue";
+        DOM.noSelection.classList.remove('hidden');
+        DOM.segmentList.classList.add('hidden');
     }
 }
 
-// ***** ECHARTS - GRÁFICO DE TENDENCIAS *****
-let trendChart;
-let currentPeriod = 'day'; // Período predeterminado
+// =========================
+// DISTRIBUTION UI
+// =========================
+function setupDistributionZones() {
+    // Toggle functionality for distribution buttons
+    const pampeanaButton = document.getElementById('camuzziGasPampeana');
+    const surButton = document.getElementById('camuzziGasDelSur');
+    const pampeanaSegments = document.querySelector('.pampeana-segments');
+    const surSegments = document.querySelector('.sur-segments');
 
-// Inicializar el gráfico de tendencias
-function initTrendChart() {
-    const chartDom = document.getElementById('trendChart');
-    if (!chartDom) {
-        console.error('Elemento del gráfico no encontrado');
-        return;
+    if (pampeanaButton) {
+        pampeanaButton.addEventListener('click', function () {
+            pampeanaSegments.classList.toggle('active');
+            // Update chevron icon
+            const icon = this.querySelector('i');
+            if (pampeanaSegments.classList.contains('active')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        });
     }
-    
-    // Configurar tema oscuro para ECharts
-    const darkTheme = {
-        backgroundColor: '#2a2e35',
-        textStyle: {
-            color: '#e0e0e0',
-        },
-        title: {
-            textStyle: {
-                color: '#e0e0e0'
+
+    if (surButton) {
+        surButton.addEventListener('click', function () {
+            surSegments.classList.toggle('active');
+            // Update chevron icon
+            const icon = this.querySelector('i');
+            if (surSegments.classList.contains('active')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
             }
-        },
-        legend: {
-            textStyle: {
-                color: '#a0a0a0'
-            }
-        },
-        xAxis: {
-            axisLine: {
-                lineStyle: {
-                    color: '#3a3f48'
-                }
-            },
-            axisLabel: {
-                color: '#a0a0a0'
-            },
-            splitLine: {
-                lineStyle: {
-                    color: '#3a3f48'
-                }
-            }
-        },
-        yAxis: {
-            axisLine: {
-                lineStyle: {
-                    color: '#3a3f48'
-                }
-            },
-            axisLabel: {
-                color: '#a0a0a0'
-            },
-            splitLine: {
-                lineStyle: {
-                    color: '#3a3f48'
-                }
-            }
-        },
-        series: []
-    };
-    
-    // Inicializar el gráfico con el tema oscuro
-    trendChart = echarts.init(chartDom);
-    trendChart.setOption(darkTheme);
-    
-    // Actualizar el gráfico con los datos iniciales
-    actualizarGraficoTendencias();
-    
-    // Agregar listeners para los botones de período
-    document.querySelectorAll('.chartButton').forEach(button => {
-        button.addEventListener('click', function() {
-            // Remover la clase active de todos los botones
-            document.querySelectorAll('.chartButton').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Agregar la clase active al botón clickeado
+        });
+    }
+
+    // Zone segment click handlers
+    document.querySelectorAll('.zoneSegment').forEach(seg => {
+        seg.addEventListener('click', function () {
+            document.querySelectorAll('.zoneSegment').forEach(s => s.classList.remove('active'));
             this.classList.add('active');
-            
-            // Actualizar el período actual y actualizar el gráfico
-            currentPeriod = this.getAttribute('data-period');
-            actualizarGraficoTendencias();
+
+            updateMeasurementPoints(this.textContent.trim());
         });
     });
-    
-    // Manejar el redimensionamiento
-    window.addEventListener('resize', function() {
-        trendChart.resize();
+}
+
+// =========================
+// DATA LOGIC
+// =========================
+function buscarDatosPorFecha() {
+    if (!AppState.selectedDateTime) return null;
+
+    let closest = null;
+    let diffMin = Infinity;
+
+    AppState.dataset.forEach(reg => {
+        const diff = Math.abs(new Date(AppState.selectedDateTime) - new Date(reg.timestamp));
+        if (diff < diffMin) {
+            diffMin = diff;
+            closest = reg;
+        }
     });
+
+    return closest;
 }
 
-// Función para generar datos de ejemplo para el gráfico
-function generarDatosDePrueba() {
-    const now = new Date();
-    const datos = {
-        fechas: [],
-        presionUpstream: [],
-        presionDownstream: [],
-        minimoContractual: []
-    };
-    
-    let numPoints;
-    let intervalo;
-    
-    // Ajustar la cantidad de puntos e intervalo según el período seleccionado
-    switch (currentPeriod) {
-        case 'day':
-            numPoints = 24;
-            intervalo = 60 * 60 * 1000; // 1 hora en milisegundos
-            break;
-        case 'week':
-            numPoints = 7;
-            intervalo = 24 * 60 * 60 * 1000; // 1 día en milisegundos
-            break;
-        case 'month':
-            numPoints = 30;
-            intervalo = 24 * 60 * 60 * 1000; // 1 día en milisegundos
-            break;
-        default:
-            numPoints = 24;
-            intervalo = 60 * 60 * 1000;
-    }
-    
-    // Generar datos aleatorios para el gráfico
-    for (let i = 0; i < numPoints; i++) {
-        const fecha = new Date(now.getTime() - (numPoints - i) * intervalo);
-        datos.fechas.push(fecha.toLocaleString());
-        
-        // Presiones con variación realista
-        const baseUpstream = 45 + (Math.random() * 3) - 1.5;
-        datos.presionUpstream.push(baseUpstream);
-        
-        const baseDownstream = 40 + (Math.random() * 3) - 1.5;
-        datos.presionDownstream.push(baseDownstream);
-        
-        // Línea constante para el mínimo contractual
-        datos.minimoContractual.push(inputMinimoContractual);
-    }
-    
-    return datos;
+function actualizarValores() {
+    const d = buscarDatosPorFecha();
+    if (!d) return;
+
+    const up = +d.upstream_point.value;
+    const down = +d.downstream_point.value;
+    const varp = +d.prediction.value;
+
+    DOM.presionUpstream.textContent = up.toFixed(2) + " kg/cm²";
+    DOM.presionDownstream.textContent = down.toFixed(2) + " kg/cm²";
+    DOM.variacion.textContent = varp.toFixed(2) + " kg/cm²";
+    DOM.presionFutura.textContent = (up + varp).toFixed(2) + " kg/cm²";
 }
 
-// Actualizar el gráfico con nuevos datos
-function actualizarGraficoTendencias() {
-    if (!trendChart) return;
-    
-    // Obtener datos (en un escenario real, estos vendrían de la API o dataset)
-    const datos = generarDatosDePrueba();
-    
-    // Configuración del gráfico
-    const option = {
-        tooltip: {
-            trigger: 'axis',
-            backgroundColor: 'rgba(42, 46, 53, 0.9)',
-            borderColor: '#3a3f48',
-            textStyle: {
-                color: '#e0e0e0'
-            },
-            axisPointer: {
-                type: 'cross',
-                label: {
-                    backgroundColor: '#6a7985'
-                }
-            }
-        },
-        legend: {
-            data: ['Presión Upstream', 'Presión Downstream', 'Mínimo Contractual'],
-            top: 'bottom'
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '60px',
-            top: '20px',
-            containLabel: true
-        },
-        xAxis: {
-            type: 'category',
-            boundaryGap: false,
-            data: datos.fechas
-        },
-        yAxis: {
-            type: 'value',
-            name: 'Presión (kg/cm²)',
-            nameLocation: 'middle',
-            nameGap: 50
-        },
+// =========================
+// CHART (ECHARTS)
+// =========================
+function generarDatos() {
+    const data = { x: [], up: [], down: [], min: [] };
+
+    for (let i = 0; i < 24; i++) {
+        data.x.push(i);
+        data.up.push(45 + Math.random() * 2);
+        data.down.push(40 + Math.random() * 2);
+        data.min.push(AppState.minimoContractual);
+    }
+
+    return data;
+}
+
+function initChart() {
+    AppState.trendChart = echarts.init(DOM.chart);
+
+    const d = generarDatos();
+
+    AppState.trendChart.setOption({
+        xAxis: { type: 'category', data: d.x },
+        yAxis: { type: 'value' },
         series: [
-            {
-                name: 'Presión Upstream',
-                type: 'line',
-                data: datos.presionUpstream,
-                smooth: true,
-                lineStyle: {
-                    width: 3,
-                    color: '#ff8c00'
-                },
-                areaStyle: {
-                    color: {
-                        type: 'linear',
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [{
-                            offset: 0,
-                            color: 'rgba(255, 140, 0, 0.5)'
-                        }, {
-                            offset: 1,
-                            color: 'rgba(255, 140, 0, 0.05)'
-                        }]
-                    }
-                }
-            },
-            {
-                name: 'Presión Downstream',
-                type: 'line',
-                data: datos.presionDownstream,
-                smooth: true,
-                lineStyle: {
-                    width: 3,
-                    color: '#4caf50'
-                },
-                areaStyle: {
-                    color: {
-                        type: 'linear',
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [{
-                            offset: 0,
-                            color: 'rgba(76, 175, 80, 0.5)'
-                        }, {
-                            offset: 1,
-                            color: 'rgba(76, 175, 80, 0.05)'
-                        }]
-                    }
-                }
-            },
-            {
-                name: 'Mínimo Contractual',
-                type: 'line',
-                data: datos.minimoContractual,
-                symbol: 'none',
-                lineStyle: {
-                    width: 2,
-                    type: 'dashed',
-                    color: '#f44336'
-                }
-            }
-        ]
-    };
-    
-    // Aplicar la configuración al gráfico
-    trendChart.setOption(option);
-}
-
-// Inicializar la carga de datos
-document.addEventListener('DOMContentLoaded', function () {
-    // Cargar los datos después de un pequeño delay
-    setTimeout(async function () {
-        await cargarDatos();
-        // Después de cargar los datos, establecer la hora actual y actualizar la pantalla
-        // setCurrentDateTimeAsDefault();
-        setSpecificDateTimeAsDefault();
-        actualizarValoresEnPantalla();
-        
-        // Inicializar el gráfico de tendencias
-        initTrendChart();
-    }, 600);
-});
-
-
-
-// ***** FUNCIONES DE GOOGLE MAPS *****
-function initMap() {
-    const mapElement = document.getElementById("map"); // Obtener el elemento DOM nativo
-
-    if (!mapElement) {
-        console.error('Elemento del mapa no encontrado');
-        return;
-    }
-
-    // Configuración del mapa
-    const map = new google.maps.Map(mapElement, {
-        zoom: GOOGLE_MAPS_CONFIG.initialZoom,
-        center: GOOGLE_MAPS_CONFIG.defaultCoords,
-        styles: [
-            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-            {
-                featureType: "administrative.locality",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#d59563" }],
-            },
-            {
-                featureType: "poi",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#d59563" }],
-            },
-            {
-                featureType: "poi.park",
-                elementType: "geometry",
-                stylers: [{ color: "#263c3f" }],
-            },
-            {
-                featureType: "poi.park",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#6b9a76" }],
-            },
-            {
-                featureType: "road",
-                elementType: "geometry",
-                stylers: [{ color: "#38414e" }],
-            },
-            {
-                featureType: "road",
-                elementType: "geometry.stroke",
-                stylers: [{ color: "#212a37" }],
-            },
-            {
-                featureType: "road",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#9ca5b3" }],
-            },
-            {
-                featureType: "road.highway",
-                elementType: "geometry",
-                stylers: [{ color: "#746855" }],
-            },
-            {
-                featureType: "road.highway",
-                elementType: "geometry.stroke",
-                stylers: [{ color: "#1f2835" }],
-            },
-            {
-                featureType: "road.highway",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#f3d19c" }],
-            },
-            {
-                featureType: "transit",
-                elementType: "geometry",
-                stylers: [{ color: "#2f3948" }],
-            },
-            {
-                featureType: "transit.station",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#d59563" }],
-            },
-            {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#17263c" }],
-            },
-            {
-                featureType: "water",
-                elementType: "labels.text.fill",
-                stylers: [{ color: "#515c6d" }],
-            },
-            {
-                featureType: "water",
-                elementType: "labels.text.stroke",
-                stylers: [{ color: "#17263c" }],
-            },
+            { data: d.up, type: 'line' },
+            { data: d.down, type: 'line' },
+            { data: d.min, type: 'line' }
         ]
     });
+}
 
-    // Para mostrar información cuando se hace clic en un marcador
+// =========================
+// MAP
+// =========================
+
+function initMap() {
+    // Dark mode styling for Google Maps
+    const darkMapStyle = [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        {
+            featureType: "administrative.locality",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }],
+        },
+        {
+            featureType: "poi",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }],
+        },
+        {
+            featureType: "poi.park",
+            elementType: "geometry",
+            stylers: [{ color: "#263c3f" }],
+        },
+        {
+            featureType: "poi.park",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#6b9a76" }],
+        },
+        {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{ color: "#38414e" }],
+        },
+        {
+            featureType: "road",
+            elementType: "geometry.stroke",
+            stylers: [{ color: "#212a37" }],
+        },
+        {
+            featureType: "road",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#9ca5b3" }],
+        },
+        {
+            featureType: "road.highway",
+            elementType: "geometry",
+            stylers: [{ color: "#746855" }],
+        },
+        {
+            featureType: "road.highway",
+            elementType: "geometry.stroke",
+            stylers: [{ color: "#1f2835" }],
+        },
+        {
+            featureType: "road.highway",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#f3d19c" }],
+        },
+        {
+            featureType: "transit",
+            elementType: "geometry",
+            stylers: [{ color: "#2f3948" }],
+        },
+        {
+            featureType: "transit.station",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }],
+        },
+        {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ color: "#17263c" }],
+        },
+        {
+            featureType: "water",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#515c6d" }],
+        },
+        {
+            featureType: "water",
+            elementType: "labels.text.stroke",
+            stylers: [{ color: "#17263c" }],
+        },
+    ];
+
+    const map = new google.maps.Map(DOM.map, {
+        center: { lat: -37.35, lng: -59.09 },
+        zoom: 7,
+        styles: darkMapStyle,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+        zoomControl: true
+    });
+
+    const locations = [
+        { lat: -38.006, lng: -57.551, title: "Mar del Plata", icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png' },
+        { lat: -38.715, lng: -62.265, title: "Bahía Blanca", icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' },
+        { lat: -34.921, lng: -57.954, title: "La Plata", icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' }
+    ];
+
+    // Create an info window to share between markers
     const infoWindow = new google.maps.InfoWindow();
 
-    // Crear un marcador para cada ubicación
-    GOOGLE_MAPS_CONFIG.locations.forEach(location => {
+    locations.forEach(loc => {
         const marker = new google.maps.Marker({
-            position: location.position,
+            position: { lat: loc.lat, lng: loc.lng },
             map: map,
-            title: location.title,
-            icon: location.icon || null // Usar icono personalizado si está definido
+            title: loc.title,
+            icon: loc.icon || 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
         });
 
-        // Agregar evento de clic al marcador
-        marker.addListener('click', function () {
-            // Mostrar ventana de información
-            infoWindow.setContent(`
-                <div>
-                    <h3>${location.title}</h3>
-                    <p>${location.info}</p>
-                </div>
-            `);
+        marker.addListener('click', () => {
+            // Set content and open info window
+            infoWindow.setContent(`<div style="color: #333; padding: 5px;"><b>${loc.title}</b><br>Distribuidora: Camuzzi Gas Pampeana</div>`);
             infoWindow.open(map, marker);
 
-            // Ejecutar función personalizada cuando se hace clic en un marcador
-            handleMarkerClick(location);
+            // Update measurement points
+            updateMeasurementPoints(loc.title);
+
+            // Highlight the corresponding zone segment in the sidebar
+            document.querySelectorAll('.zoneSegment').forEach(seg => {
+                if (seg.textContent.trim() === loc.title) {
+                    document.querySelectorAll('.zoneSegment').forEach(s => s.classList.remove('active'));
+                    seg.classList.add('active');
+
+                    // Ensure parent is expanded
+                    const parent = seg.closest('.zoneSegments');
+                    if (parent && !parent.classList.contains('active')) {
+                        parent.classList.add('active');
+
+                        // Update the chevron icon
+                        const button = parent.previousElementSibling;
+                        if (button) {
+                            const icon = button.querySelector('i');
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-up');
+                            }
+                        }
+                    }
+                }
+            });
         });
     });
-
-    console.log('Mapa de Google inicializado correctamente');
 }
 
-// Función para cargar dinámicamente el script de Google Maps
-function loadGoogleMapsScript() {
-    // Verificar si Google Maps ya está cargado
-    if (typeof google !== 'undefined' && google.maps) {
-        initMap();
-        return;
-    }
 
-    // Crear y configurar el script
+function loadMap() {
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.apiKey}&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&callback=initMap`;
     script.async = true;
-    script.defer = true;
-
-    // Manejar errores de carga
-    script.onerror = function () {
-        console.error('Error al cargar Google Maps API');
-    };
-
-    // Agregar el script al head del documento
+    window.initMap = initMap;
     document.head.appendChild(script);
 }
 
-// ***** INICIALIZACIÓN *****
-// Cargar Google Maps cuando el documento esté listo
-document.addEventListener('DOMContentLoaded', function () {
-    // Agregar event listeners para la navegación
-    setupNavigation();
-    
-    // Pequeño delay para asegurar que todos los elementos del DOM estén listos
-    setTimeout(function () {
-        loadGoogleMapsScript();
-    }, 500);
-});
-
-// Hacer initMap global para que Google Maps pueda acceder a ella
-window.initMap = initMap;
-
-// Función para configurar la navegación
+// =========================
+// NAVIGATION
+// =========================
 function setupNavigation() {
-    // Agregar event listeners para los botones de navegación
-    document.querySelectorAll('.navButton').forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.textContent.includes('Camu Bot')) {
+    document.querySelectorAll('.navButton').forEach(btn => {
+        btn.addEventListener('click', function () {
+            if (this.textContent.includes('Camu')) {
                 window.location.href = './chatbot/index.html';
             }
-            // Aquí se pueden agregar más navegaciones para otros botones si es necesario
         });
     });
 }
 
-// Event listener del datetimePicker para actualizar los valores
-$datetimePicker.addEventListener('change', function () {
-    selectedDateTime = this.value;
+// =========================
+// INIT
+// =========================
+document.addEventListener('DOMContentLoaded', async () => {
 
-    // Convertir a objeto Date (código existente)
-    let dateObject = new Date(selectedDateTime);
+    DOM.minimo.textContent = AppState.minimoContractual;
 
-    // Formatear la fecha (código existente)
-    let month = String(dateObject.getMonth() + 1).padStart(2, '0');
-    let day = String(dateObject.getDate()).padStart(2, '0');
-    let year = dateObject.getFullYear();
-    let hours = String(dateObject.getHours()).padStart(2, '0');
-    let minutes = String(dateObject.getMinutes()).padStart(2, '0');
-    let seconds = '00'; 
+    await cargarDatos();
 
-    // Formato: MM-DD-YYYY HH:MM:SS (código existente)
-    formattedDateTime = `${month}-${day}-${year} ${hours}:${minutes}:${seconds}`;
+    setupDistributionZones();
+    setupNavigation();
+    initChart();
+    loadMap();
 
-    console.log("Fecha y hora original:", selectedDateTime);
-    console.log("Fecha y hora formateada:", formattedDateTime);
-    
-    // Actualizar la pantalla con los datos correspondientes
-    actualizarValoresEnPantalla();
+    DOM.datetimePicker.addEventListener('change', function () {
+        AppState.selectedDateTime = this.value;
+        actualizarValores();
+    });
 });
-
-// Método 1: Establecer fecha actual como valor por defecto
-// 4-2-26: Por el momento no uso esta función dado que los datos llegan hasta el 31-12-25
-function setCurrentDateTimeAsDefault() {
-    const now = new Date();
-
-    // Formatear al formato requerido por el input datetime-local: YYYY-MM-DDThh:mm
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-
-    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-
-    // Establecer el valor
-    if ($datetimePicker) {
-        $datetimePicker.value = formattedDateTime;
-    }
-}
-
-// Método 2: Establecer una fecha específica como valor por defecto
-function setSpecificDateTimeAsDefault() {
-    // Fecha específica: 1 de enero de 2025 a las 00:00
-    const fechaPredeterminada = new Date(2025, 0, 1, 0, 0); // Año, mes (0-11), día, hora, minutos
-    
-    // Formatear al formato requerido por el input datetime-local: YYYY-MM-DDThh:mm
-    const year = fechaPredeterminada.getFullYear();
-    const month = String(fechaPredeterminada.getMonth() + 1).padStart(2, '0');
-    const day = String(fechaPredeterminada.getDate()).padStart(2, '0');
-    const hours = String(fechaPredeterminada.getHours()).padStart(2, '0');
-    const minutes = String(fechaPredeterminada.getMinutes()).padStart(2, '0');
-    
-    const formattedDateTimeForInput = `${year}-${month}-${day}T${hours}:${minutes}`;
-    
-    // Establecer el valor y actualizar la variable global
-    if ($datetimePicker) {
-        $datetimePicker.value = formattedDateTimeForInput;
-        selectedDateTime = formattedDateTimeForInput;
-        formattedDateTime = `${month}-${day}-${year} ${hours}:${minutes}:00`;
-    }
-}
-
-// Función para manejar el clic en un marcador
-function handleMarkerClick(location) {
-    console.log(`Marcador clickeado: ${location.title} (ID: ${location.id})`);
-
-    // Aquí puedes agregar cualquier acción que quieras ejecutar al hacer clic en un marcador
-    // Por ejemplo:
-
-    // 1. Actualizar información en otro panel
-    const infoPanelTitle = document.getElementById("infoPanelTitle");
-    if (infoPanelTitle) {
-        infoPanelTitle.textContent = location.title;
-    }
-
-    // 2. Cargar datos específicos del punto
-    loadDataForLocation(location.id);
-
-    // 3. Disparar una acción personalizada
-}
-
-// Ejemplo de función para cargar datos específicos para una ubicación
-function loadDataForLocation(locationId) {
-    // Puedes hacer una consulta específica basada en el ID de la ubicación
-    console.log(`Cargando datos para la ubicación ID: ${locationId}`);
-
-    // Aquí podría ir una llamada a una API, una consulta a tu base de datos, etc.
-}

@@ -15,14 +15,14 @@
     --chart-line-1: #ff8c00;
     --chart-line-2: #4caf50;
     --chart-line-3: #f44336;
-    
+
     /* Spacing */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
-    
+
     /* Typography */
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --font-size-xs: 0.75rem;
@@ -31,16 +31,16 @@
     --font-size-lg: 1.25rem;
     --font-size-xl: 1.5rem;
     --font-size-xxl: 2rem;
-    
+
     /* Border radius */
     --border-radius-sm: 4px;
     --border-radius-md: 6px;
     --border-radius-lg: 8px;
-    
+
     /* Shadow */
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.25);
-    --shadow-lg: 0 10px 15px rgba(0,0,0,0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -144,8 +144,8 @@ body {
     margin: 0 1.5rem;
 }
 
-/* Sidebar - Now on left */
-.sidebar {
+/* Left Sidebar for Distribution Zones */
+.leftSidebar {
     width: 280px;
     background-color: var(--panel-background);
     border-radius: var(--border-radius-md);
@@ -154,6 +154,19 @@ body {
     display: flex;
     flex-direction: column;
     margin-right: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+/* Right Sidebar - moved from left */
+.rightSidebar {
+    width: 280px;
+    background-color: var(--panel-background);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
     border: 1px solid var(--border-color);
 }
 
@@ -198,6 +211,52 @@ body {
 .filterButton.active {
     background-color: var(--primary-color);
     color: var(--panel-background);
+}
+
+/* Distribution Zone Styling */
+.distributionZones {
+    display: flex;
+    flex-direction: column;
+}
+
+.distributionButton {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.distributionButton:hover {
+    background-color: rgba(255, 140, 0, 0.1);
+}
+
+.zoneName {
+    font-weight: 500;
+}
+
+.zoneSegments {
+    display: none;
+    padding-left: var(--spacing-lg);
+    background-color: var(--card-background);
+}
+
+.zoneSegments.active {
+    display: block;
+}
+
+.zoneSegment {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.zoneSegment:hover {
+    background-color: rgba(255, 140, 0, 0.1);
+    color: var(--primary-color);
 }
 
 /* Map Container */
@@ -367,22 +426,68 @@ body {
     color: var(--text-color);
 }
 
+/* No Selection Message */
+.noSelectionMessage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    color: var(--light-text);
+    text-align: center;
+    height: 300px;
+}
+
+.messageIcon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.6;
+}
+
+.messageText {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Adding transition effect for smoother UX */
+.segmentItem {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease, opacity 0.3s ease;
+}
+
 /* Responsive design */
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1400px) {
     #mainContent {
         flex-direction: column;
     }
-    
-    .sidebar {
+
+    .leftSidebar,
+    .rightSidebar {
         width: 100%;
         margin-right: 0;
+        margin-left: 0;
         margin-bottom: 1rem;
     }
-    
+
+    .distributionZones {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .distributionButton {
+        flex: 1;
+        min-width: 200px;
+    }
+
     .segmentFilters {
         justify-content: center;
     }
-    
+
     .mapArea {
         height: 400px;
     }
@@ -392,32 +497,36 @@ body {
     .statsSummary {
         flex-wrap: wrap;
     }
-    
+
     .statCard {
         flex: 0 0 50%;
         border-bottom: 1px solid var(--border-color);
         border-right: none;
     }
-    
+
     .navButton span {
         display: none;
     }
-    
+
     #topNav h1 {
         font-size: 16px;
     }
-    
+
     .subtitle {
         display: none;
     }
-    
+
     .chartHeader {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .chartControls {
         margin-top: 8px;
+    }
+
+    .distributionButton {
+        width: 100%;
     }
 }
 
@@ -441,7 +550,22 @@ body {
     cursor: not-allowed;
 }
 
-input:disabled, button:disabled, label:disabled {
+input:disabled,
+button:disabled,
+label:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* For backward compatibility */
+.sidebar {
+    width: 280px;
+    background-color: var(--panel-background);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
+    border: 1px solid var(--border-color);
 }
