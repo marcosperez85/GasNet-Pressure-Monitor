@@ -1,0 +1,84 @@
+{
+	"typeName": "GasNet-Pressure-Monitor",
+	"pluginId": "GasNet-Pressure-Monitor",
+	"category": "General",
+	"description": {
+		"title": "Analytic Dashboard",
+		"overview": "Analytic Dashboard"
+	},
+	"info": {
+		"version": "1.0.7",
+		"updated": "27/02/2026",
+		"size": "12 KB",
+		"developer": "Marcos Perez"
+	},
+	"customIcon": "/custom/default/GasNet-Pressure-Monitor/customIcon.png",
+	"origin": "custom",
+	"placeholder": "/custom/default/GasNet-Pressure-Monitor/preview.png",
+	"preview": "/custom/default/GasNet-Pressure-Monitor/preview.png",
+	"scripts": [
+		"librerias/all.min.js",
+		"librerias/echarts.min.js",
+		"chart.js",
+		"data.js",
+		"dom.js",
+		"map.js",		
+		"navigation.js",
+		"sidebar.js",
+		"state.js"
+	],
+	"schema": {
+		"draggable": true,
+		"JSONSchema": {
+			"inputPEntradaHist": {
+				"title": "Presion de Entrada Historica",
+				"$ref": "#/definitions/dataSource"
+			},
+			"inputCaudalHist": {
+				"title": "Caudal Historico",
+				"$ref": "#/definitions/dataSource"
+			},
+			"startDateGlobal": {
+				"title": "Fecha de inicio",
+				"$ref": "#/definitions/dataTarget"
+			},
+			"endDateGlobal": {
+				"title": "Fecha de fin",
+				"$ref": "#/definitions/dataTarget"
+			},
+			"GOOGLE_MAPS_API_KEY": {
+				"title": "Google Maps API KEY",
+				"$ref": "#/definitions/dataSource"
+			},
+			"API_GATEWAY_URL": {
+				"title": "URL de API Gateway",
+				"$ref": "#/definitions/dataSource"
+			}
+		},
+		"UISchema": {
+			"inputPEntradaHist": {
+				"ui:field": "dataSource"
+			},
+			"inputCaudalHist": {
+				"ui:field": "dataSource"
+			},
+			"startDateGlobal": {
+				"ui:field": "dataTarget"
+			},
+			"endDateGlobal": {
+				"ui:field": "dataTarget"
+			},
+			"GOOGLE_MAPS_API_KEY": {
+				"ui:field": "dataSource"
+			},
+			"API_GATEWAY_URL": {
+				"ui:field": "dataSource"
+			}
+		}
+	},
+	"commands": [],
+	"defaultConfiguration": {
+		"defaultHeight": 541,
+		"defaultWidth": 1178
+	}
+}
