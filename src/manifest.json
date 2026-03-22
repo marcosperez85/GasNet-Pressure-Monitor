@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "1.0.4",
+		"version": "1.0.5",
 		"updated": "22/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -42,14 +42,6 @@
 			"GOOGLE_MAPS_API_KEY": {
 				"title": "Google Maps API KEY",
 				"$ref": "#/definitions/dataSource"
-			},
-			"API_GATEWAY_URL": {
-				"title": "URL de API Gateway",
-				"$ref": "#/definitions/dataSource"
-			},
-			"API_GATEWAY_API_KEY": {
-				"title": "API KEY de API Gateway",
-				"$ref": "#/definitions/dataSource"
 			}
 		},
 		"UISchema": {
@@ -67,16 +59,15 @@
 			},
 			"GOOGLE_MAPS_API_KEY": {
 				"ui:field": "dataSource"
-			},
-			"API_GATEWAY_URL": {
-				"ui:field": "dataSource"
-			},
-			"API_GATEWAY_API_KEY": {
-				"ui:field": "dataSource"
 			}
 		}
 	},
-	"commands": [],
+	"commands": [
+		{
+			"title": "Boton de Camu Bot",
+			"id": "onClickedCamuBotButton"
+		}
+	],
 	"defaultConfiguration": {
 		"defaultHeight": 541,
 		"defaultWidth": 1178
