@@ -1,133 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel='stylesheet' type='text/css' media='screen' href='./style_landing.css'>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Agregar ECharts -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <title>GasNet Pressure Monitor</title>
-</head>
-
-<body>
-    <!-- Top navigation bar -->
-    <nav id="topNav">
-        <div class="navLeft">
-            <div class="logoContainer">
-                <i class="fas fa-gauge-high"></i>
-            </div>
-            <h1>Gas Pressure Monitor</h1>
-            <span class="subtitle">INDUSTRIAL PIPELINE MONITORING SYSTEM</span>
+<!-- Top navigation bar -->
+<nav id="topNav">
+    <div class="navLeft">
+        <div class="logoContainer">
+            <i class="fas fa-gauge-high"></i>
         </div>
-        <div class="navRight">
-            <button class="navButton active"><i class="fas fa-map"></i> Map View</button>
-            <button class="navButton"><i class="fas fa-chart-line"></i> Dashboard</button>
-            <button class="navButton"><i class="fas fa-robot"></i> Camu Bot</button>
-            <button class="navButton"><i class="fas fa-cog"></i> Settings</button>
-        </div>
-    </nav>
+        <h1>Gas Pressure Monitor</h1>
+        <span class="subtitle">INDUSTRIAL PIPELINE MONITORING SYSTEM</span>
+    </div>
+    <div class="navRight">
+        <button class="navButton active"><i class="fas fa-map"></i> Map View</button>
+        <button class="navButton"><i class="fas fa-chart-line"></i> Dashboard</button>
+        <button class="navButton"><i class="fas fa-robot"></i> Camu Bot</button>
+        <button class="navButton"><i class="fas fa-cog"></i> Settings</button>
+    </div>
+</nav>
 
-    <!-- Main content area with sidebars on BOTH sides -->
-    <div id="mainContent">
-        <!-- Left Sidebar for Distribution Zones -->
-        <div class="leftSidebar">
-            <div class="sidebarHeader">
-                <h3>Distribuidoras</h3>
-            </div>
-
-            <!-- Distribution Zone Buttons -->
-            <div class="distributionZones">
-                <div class="distributionButton" id="camuzziGasPampeana">
-                    <div class="zoneName">Camuzzi Gas Pampeana</div>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="zoneSegments pampeana-segments">
-                    <div class="zoneSegment">Bahía Blanca</div>
-                    <div class="zoneSegment">Buenos Aires Centro</div>
-                    <div class="zoneSegment">Buenos Aires Norte</div>
-                    <div class="zoneSegment">Buenos Aires Sur</div>
-                    <div class="zoneSegment">La Pampa</div>
-                    <div class="zoneSegment">La Plata</div>
-                    <div class="zoneSegment">Mar del Plata</div>
-                </div>
-
-                <div class="distributionButton" id="camuzziGasDelSur">
-                    <div class="zoneName">Camuzzi Gas del Sur</div>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="zoneSegments sur-segments">
-                    <div class="zoneSegment">Andina</div>
-                    <div class="zoneSegment">Comodoro Rivadavia</div>
-                    <div class="zoneSegment">De los Lagos</div>
-                    <div class="zoneSegment">Del Comahue</div>
-                    <div class="zoneSegment">Patagonia Norte</div>
-                    <div class="zoneSegment">Península</div>
-                    <div class="zoneSegment">Santa Cruz Sur</div>
-                    <div class="zoneSegment">Tierra del Fuego</div>
-                </div>
-            </div>
+<!-- Main content area with sidebars on BOTH sides -->
+<div id="mainContent">
+    <!-- Left Sidebar for Distribution Zones -->
+    <div class="leftSidebar">
+        <div class="sidebarHeader">
+            <h3>Distribuidoras</h3>
         </div>
 
-        <!-- Map content in center -->
-        <div class="mapContent">
-            <!-- Map area -->
-            <div id="map" class="mapArea"></div>
+        <!-- Distribution Zone Buttons -->
+        <div class="distributionZones">
+            <div class="distributionButton" id="camuzziGasPampeana">
+                <div class="zoneName">Camuzzi Gas Pampeana</div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="zoneSegments pampeana-segments">
+                <div class="zoneSegment">Bahía Blanca</div>
+                <div class="zoneSegment">Buenos Aires Centro</div>
+                <div class="zoneSegment">Buenos Aires Norte</div>
+                <div class="zoneSegment">Buenos Aires Sur</div>
+                <div class="zoneSegment">La Pampa</div>
+                <div class="zoneSegment">La Plata</div>
+                <div class="zoneSegment">Mar del Plata</div>
+            </div>
 
-            <!-- Trends chart section -->
-            <div class="chartPanel">
-                <div class="chartHeader">
-                    <h4>Tendencia de Presión</h4>
-                    <div class="chartControls">
-                        <button class="chartButton active" data-period="day">Día</button>
-                        <button class="chartButton" data-period="week">Semana</button>
-                        <button class="chartButton" data-period="month">Mes</button>
-                    </div>
-                </div>
-                <div id="trendChart" class="chartContainer"></div>
+            <div class="distributionButton" id="camuzziGasDelSur">
+                <div class="zoneName">Camuzzi Gas del Sur</div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="zoneSegments sur-segments">
+                <div class="zoneSegment">Andina</div>
+                <div class="zoneSegment">Comodoro Rivadavia</div>
+                <div class="zoneSegment">De los Lagos</div>
+                <div class="zoneSegment">Del Comahue</div>
+                <div class="zoneSegment">Patagonia Norte</div>
+                <div class="zoneSegment">Península</div>
+                <div class="zoneSegment">Santa Cruz Sur</div>
+                <div class="zoneSegment">Tierra del Fuego</div>
             </div>
         </div>
-
-        <!-- Right Sidebar for Pipeline Segments -->
-        <div class="rightSidebar">
-            <div class="sidebarHeader">
-                <h3>Puntos de Medición</h3>
-                <div class="segmentCount">Sistema de Monitoreo de Presiones</div>
-            </div>
-
-            <!-- Initial message when no selection has been made -->
-            <div id="noSelectionMessage" class="noSelectionMessage">
-                <div class="messageIcon">
-                    <i class="fas fa-hand-pointer"></i>
-                </div>
-                <div class="messageText">
-                    Seleccione una Distribuidora y una Unidad de Negocio para ver los puntos de medición
-                </div>
-            </div>
-
-            <!-- List of pipeline segments (initially empty) -->
-            <div id="segmentList" class="segmentList hidden">
-                <!-- Segments will be added dynamically -->
-            </div>
-        </div>
-
-
     </div>
 
-    <!-- Cargar primero el archivo de configuración -->
-    <script src="./config.js"></script>
+    <!-- Map content in center -->
+    <div class="mapContent">
+        <!-- Map area -->
+        <div id="map" class="mapArea"></div>
 
-    <!-- Después cargar el script principal que usa la configuración -->
-    <script src="./js/config-check.js"></script>
-    <script src="./js/state.js"></script>
-    <script src="./js/dom.js"></script>
-    <script src="./js/data.js"></script>
-    <script src="./js/sidebar.js"></script>
-    <script src="./js/chart.js"></script>
-    <script src="./js/map.js"></script>
-    <script src="./js/navigation.js"></script>
-    <script src="./js/main.js"></script>
-</body>
+        <!-- Trends chart section -->
+        <div class="chartPanel">
+            <div class="chartHeader">
+                <h4>Tendencia de Presión</h4>
+                <div class="chartControls">
+                    <button class="chartButton active" data-period="day">Día</button>
+                    <button class="chartButton" data-period="week">Semana</button>
+                    <button class="chartButton" data-period="month">Mes</button>
+                </div>
+            </div>
+            <div id="trendChart" class="chartContainer"></div>
+        </div>
+    </div>
 
-</html>
+    <!-- Right Sidebar for Pipeline Segments -->
+    <div class="rightSidebar">
+        <div class="sidebarHeader">
+            <h3>Puntos de Medición</h3>
+            <div class="segmentCount">Sistema de Monitoreo de Presiones</div>
+        </div>
+
+        <!-- Initial message when no selection has been made -->
+        <div id="noSelectionMessage" class="noSelectionMessage">
+            <div class="messageIcon">
+                <i class="fas fa-hand-pointer"></i>
+            </div>
+            <div class="messageText">
+                Seleccione una Distribuidora y una Unidad de Negocio para ver los puntos de medición
+            </div>
+        </div>
+
+        <!-- List of pipeline segments (initially empty) -->
+        <div id="segmentList" class="segmentList hidden">
+            <!-- Segments will be added dynamically -->
+        </div>
+    </div>
+
+
+</div>
