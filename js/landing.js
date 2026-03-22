@@ -16,21 +16,12 @@ const AppState = {
     selectedDateTime: null,
     minimoContractual: 42,
     trendChart: null,
-    currentPeriod: 'day'
 };
 
 // =========================
 // DOM CACHE
 // =========================
 const DOM = {
-    datetimePicker: document.getElementById("datetimePicker"),
-    presionUpstream: document.getElementById("presionDeEntradaUpstream"),
-    presionDownstream: document.getElementById("presionDeEntradaDownstream"),
-    variacion: document.getElementById("variacionDePresion"),
-    presionFutura: document.getElementById("presionFutura"),
-    minimo: document.getElementById("minimoContractual"),
-    tiempoRestante: document.getElementById("tiempoRestante"),
-
     segmentList: document.getElementById('segmentList'),
     noSelection: document.getElementById('noSelectionMessage'),
 
@@ -154,40 +145,6 @@ function setupDistributionZones() {
             updateMeasurementPoints(this.textContent.trim());
         });
     });
-}
-
-// =========================
-// DATA LOGIC
-// =========================
-function buscarDatosPorFecha() {
-    if (!AppState.selectedDateTime) return null;
-
-    let closest = null;
-    let diffMin = Infinity;
-
-    AppState.dataset.forEach(reg => {
-        const diff = Math.abs(new Date(AppState.selectedDateTime) - new Date(reg.timestamp));
-        if (diff < diffMin) {
-            diffMin = diff;
-            closest = reg;
-        }
-    });
-
-    return closest;
-}
-
-function actualizarValores() {
-    const d = buscarDatosPorFecha();
-    if (!d) return;
-
-    const up = +d.upstream_point.value;
-    const down = +d.downstream_point.value;
-    const varp = +d.prediction.value;
-
-    DOM.presionUpstream.textContent = up.toFixed(2) + " kg/cm²";
-    DOM.presionDownstream.textContent = down.toFixed(2) + " kg/cm²";
-    DOM.variacion.textContent = varp.toFixed(2) + " kg/cm²";
-    DOM.presionFutura.textContent = (up + varp).toFixed(2) + " kg/cm²";
 }
 
 // =========================
@@ -398,17 +355,10 @@ function setupNavigation() {
 // =========================
 document.addEventListener('DOMContentLoaded', async () => {
 
-    DOM.minimo.textContent = AppState.minimoContractual;
-
     await cargarDatos();
 
     setupDistributionZones();
     setupNavigation();
     initChart();
     loadMap();
-
-    DOM.datetimePicker.addEventListener('change', function () {
-        AppState.selectedDateTime = this.value;
-        actualizarValores();
-    });
 });

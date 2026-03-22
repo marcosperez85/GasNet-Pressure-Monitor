@@ -371,61 +371,6 @@ body {
     font-weight: 500;
 }
 
-/* Data Panel for our monitoring variables */
-.dataPanel {
-    background-color: var(--card-background);
-    border-radius: var(--border-radius-md);
-    border: 1px solid var(--border-color);
-    padding: var(--spacing-lg);
-    margin-top: 1rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.dataPanel h4 {
-    margin-bottom: 16px;
-    font-size: var(--font-size-md);
-    color: var(--primary-color);
-    font-weight: 600;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 8px;
-}
-
-.dataRow {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dataLabel {
-    font-size: var(--font-size-sm);
-    color: var(--light-text);
-    flex: 1;
-}
-
-.dataValue {
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    text-align: right;
-    flex: 1;
-}
-
-.textoAlerta {
-    color: var(--danger-color);
-    font-weight: 600;
-}
-
-.dataInput {
-    padding: 6px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-sm);
-    width: 100%;
-    background-color: var(--background-color);
-    color: var(--text-color);
-}
-
 /* No Selection Message */
 .noSelectionMessage {
     display: flex;
