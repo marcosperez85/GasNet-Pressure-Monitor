@@ -1,3 +1,6 @@
+import { DOM } from './dom';
+import { MEASUREMENT_POINTS } from './data';
+
 function createSegmentItem(point) {
     const $item = $('<div></div>').addClass('segmentItem');
 
@@ -20,7 +23,7 @@ function createSegmentItem(point) {
     return $item[0];
 }
 
-function updateMeasurementPoints(unit) {
+export function updateMeasurementPoints(unit) {
      if (MEASUREMENT_POINTS[unit]) {
         $(DOM.noSelection).addClass('hidden');
         $(DOM.segmentList).removeClass('hidden');
@@ -35,7 +38,7 @@ function updateMeasurementPoints(unit) {
     }
 }
 
-function setupDistributionZones() {
+export function setupDistributionZones() {
     const $pampeanaButton = $('#camuzziGasPampeana');
     const $surButton = $('#camuzziGasDelSur');
     const $pampeanaSegments = $('.pampeana-segments');

@@ -1,5 +1,5 @@
 // State management doesn't require jQuery changes, so it remains the same
-const AppState = {
+export const AppState = {
     dataset: [],
     selectedDateTime: null,
     minimoContractual: 42,

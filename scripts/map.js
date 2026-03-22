@@ -1,3 +1,6 @@
+import { DOM } from './dom';
+import { updateMeasurementPoints } from './sidebar';
+
 function initMap() {
     // Dark mode styling for Google Maps
     const darkMapStyle = [
@@ -142,16 +145,16 @@ function initMap() {
     });
 }
 
-function loadMap() {
+export function loadMap(apiKey) {
 
     // Defensive check to ensure API key exists
-    if (!GOOGLE_MAPS_API_KEY) {
+    if (!apiKey) {
         console.error('Cannot load Google Maps: API key is not available');
         return;
     }
 
     const script = $('<script></script>');
-    script.attr('src', `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap`);
+    script.attr('src', `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`);
     script.attr('async', true);
     window.initMap = initMap;
     $('head').append(script);

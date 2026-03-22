@@ -1,4 +1,4 @@
-MEASUREMENT_POINTS = {
+export const MEASUREMENT_POINTS = {
     // UNIDADES DE NEGOCIO Y PUNTOS DE MEDICIÓN DE DISTRIBUIDORA PAMPEANA
     'Bahía Blanca': [
         { title: 'Bahía Blanca', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },

@@ -1,4 +1,7 @@
-function generarDatos() {
+import { DOM } from './dom';
+import { AppState } from './state';
+
+export function generarDatos() {
     const data = { x: [], up: [], down: [], min: [] };
 
     for (let i = 0; i < 24; i++) {
@@ -11,7 +14,7 @@ function generarDatos() {
     return data;
 }
 
-function initChart() {
+export function initChart() {
     // jQuery doesn't change echarts initialization, just pass the DOM element
     AppState.trendChart = echarts.init(DOM.chart);
 
