@@ -60,14 +60,15 @@ const MEASUREMENT_POINTS = {
         { title: 'Medanito', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' }
     ],
     'La Plata': [
+        { title: 'Despacho Pantalla 1', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
+        { title: 'Despacho Pantalla 2', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' }
+
+    ],
+    'Mar del Plata': [
         { title: 'Sistema Tandil - MDP', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
         { title: 'Sistema de la Costa', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
         { title: 'Sistema Balcarce', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' },
         { title: 'Sistema MDP Ciudad', subtitle: 'Distribución urbana', linepack: '6.4 Sm3', pressure: '44.1 bar' }
-    ],
-    'Mar del Plata': [
-        { title: 'Despacho Pantalla 1', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Despacho Pantalla 2', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' }
     ],
 
     // UNIDADES DE NEGOCIO Y PUNTOS DE MEDICIÓN DE DISTRIBUIDORA DEL SUR
