@@ -12,6 +12,7 @@ function generarDatos() {
 }
 
 function initChart() {
+    // jQuery doesn't change echarts initialization, just pass the DOM element
     AppState.trendChart = echarts.init(DOM.chart);
 
     const d = generarDatos();

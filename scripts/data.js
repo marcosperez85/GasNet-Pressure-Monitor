@@ -1,6 +1,4 @@
-const DATA_URL = './data/dataset_2022-2025.json';
-
-const MEASUREMENT_POINTS = {
+MEASUREMENT_POINTS = {
     // UNIDADES DE NEGOCIO Y PUNTOS DE MEDICIÓN DE DISTRIBUIDORA PAMPEANA
     'Bahía Blanca': [
         { title: 'Bahía Blanca', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
@@ -72,8 +70,3 @@ const MEASUREMENT_POINTS = {
         { title: 'Sistema Fueguino', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' }
     ],
 };
-
-async function cargarDatos() {
-    const res = await fetch(DATA_URL);
-    AppState.dataset = await res.json();
-}
