@@ -24,15 +24,113 @@
         <div class="navRight">
             <button class="navButton active"><i class="fas fa-map"></i> Map View</button>
             <button class="navButton"><i class="fas fa-chart-line"></i> Dashboard</button>
-            <button class="navButton"><i class="fas fa-robot"></i> Camu Bot</button>
+            <button class="navButton"><i class="fas fa-robot"></i> Camu</button>
             <button class="navButton"><i class="fas fa-cog"></i> Settings</button>
         </div>
     </nav>
 
-    <!-- Main content area with sidebar on LEFT -->
+    <!-- Main content area with sidebars on BOTH sides -->
     <div id="mainContent">
-        <!-- Left Sidebar for Pipeline Segments -->
-        <div class="sidebar">
+        <!-- Left Sidebar for Distribution Zones -->
+        <div class="leftSidebar">
+            <div class="sidebarHeader">
+                <h3>Distribuidoras</h3>
+            </div>
+            
+            <!-- Distribution Zone Buttons -->
+            <div class="distributionZones">
+                <div class="distributionButton" id="camuzziGasPampeana">
+                    <div class="zoneName">Camuzzi Gas Pampeana</div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="zoneSegments pampeana-segments">
+                    <div class="zoneSegment">Bahía Blanca</div>
+                    <div class="zoneSegment">Buenos Aires Centro</div>
+                    <div class="zoneSegment">Buenos Aires Norte</div>
+                    <div class="zoneSegment">Buenos Aires Sur</div>
+                    <div class="zoneSegment">La Pampa</div>
+                    <div class="zoneSegment">La Plata</div>
+                    <div class="zoneSegment">Mar del Plata</div>
+                </div>
+                
+                <div class="distributionButton" id="camuzziGasDelSur">
+                    <div class="zoneName">Camuzzi Gas del Sur</div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="zoneSegments sur-segments">
+                    <div class="zoneSegment">Andina</div>
+                    <div class="zoneSegment">Comodoro Rivadavia</div>
+                    <div class="zoneSegment">De los Lagos</div>
+                    <div class="zoneSegment">Del Comahue</div>
+                    <div class="zoneSegment">Patagonia Norte</div>
+                    <div class="zoneSegment">Península</div>
+                    <div class="zoneSegment">Santa Cruz Sur</div>
+                    <div class="zoneSegment">Tierra del Fuego</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map content in center -->
+        <div class="mapContent">
+            <!-- Map area -->
+            <div id="map" class="mapArea"></div>
+
+            <!-- Trends chart section -->
+            <div class="chartPanel">
+                <div class="chartHeader">
+                    <h4>Tendencia de Presión</h4>
+                    <div class="chartControls">
+                        <button class="chartButton active" data-period="day">Día</button>
+                        <button class="chartButton" data-period="week">Semana</button>
+                        <button class="chartButton" data-period="month">Mes</button>
+                    </div>
+                </div>
+                <div id="trendChart" class="chartContainer"></div>
+            </div>
+
+            <!-- Data panel below map -->
+            <div class="dataPanel">
+                <h4>Variables a monitorear:</h4>
+                
+                <div class="dataRow">
+                    <label for="datetimePicker" class="dataLabel">Selecciona fecha y hora:</label>
+                    <input type="datetime-local" id="datetimePicker" class="dataInput">
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelPresionDeEntradaUpstream" class="dataLabel">Presión de entrada:</div>
+                    <div id="presionDeEntradaUpstream" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelPresionDeEntradaDownstream" class="dataLabel">Presión de entrada downstream:</div>
+                    <div id="presionDeEntradaDownstream" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelVariacionDePresion" class="dataLabel">Variacion en 48hs:</div>
+                    <div id="variacionDePresion" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelPresionFutura" class="dataLabel">Presión de entrada en 48hs:</div>
+                    <div id="presionFutura" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelMinimoContractual" class="dataLabel">Mínimo contractual:</div>
+                    <div id="minimoContractual" class="dataValue">Preview</div>
+                </div>
+                
+                <div class="dataRow">
+                    <div id="labelTiempoRestante" class="dataLabel">Tiempo restante para umbral:</div>
+                    <div id="tiempoRestante" class="dataValue">Preview</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar for Pipeline Segments -->
+        <div class="rightSidebar">
             <div class="sidebarHeader">
                 <h3>Pipeline Segments</h3>
                 <div class="segmentCount">328/450 segments | 12 critical | 8 warning</div>
@@ -91,66 +189,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Map content on right -->
-        <div class="mapContent">
-            <!-- Map area -->
-            <div id="map" class="mapArea"></div>
-
-            <!-- Trends chart section -->
-            <div class="chartPanel">
-                <div class="chartHeader">
-                    <h4>Tendencia de Presión</h4>
-                    <div class="chartControls">
-                        <button class="chartButton active" data-period="day">Día</button>
-                        <button class="chartButton" data-period="week">Semana</button>
-                        <button class="chartButton" data-period="month">Mes</button>
-                    </div>
-                </div>
-                <div id="trendChart" class="chartContainer"></div>
-            </div>
-
-            <!-- Data panel below map -->
-            <div class="dataPanel">
-                <h4>Variables a monitorear:</h4>
-                
-                <div class="dataRow">
-                    <label for="datetimePicker" class="dataLabel">Selecciona fecha y hora:</label>
-                    <input type="datetime-local" id="datetimePicker" class="dataInput">
-                </div>
-                
-                <div class="dataRow">
-                    <div id="labelPresionDeEntradaUpstream" class="dataLabel">Presión de entrada:</div>
-                    <div id="presionDeEntradaUpstream" class="dataValue">Preview</div>
-                </div>
-                
-                <div class="dataRow">
-                    <div id="labelPresionDeEntradaDownstream" class="dataLabel">Presión de entrada downstream:</div>
-                    <div id="presionDeEntradaDownstream" class="dataValue">Preview</div>
-                </div>
-                
-                <div class="dataRow">
-                    <div id="labelVariacionDePresion" class="dataLabel">Variacion en 48hs:</div>
-                    <div id="variacionDePresion" class="dataValue">Preview</div>
-                </div>
-                
-                <div class="dataRow">
-                    <div id="labelPresionFutura" class="dataLabel">Presión de entrada en 48hs:</div>
-                    <div id="presionFutura" class="dataValue">Preview</div>
-                </div>
-                
-                <div class="dataRow">
-                    <div id="labelMinimoContractual" class="dataLabel">Mínimo contractual:</div>
-                    <div id="minimoContractual" class="dataValue">Preview</div>
-                </div>
-                
-                <div class="dataRow">
-                    <div id="labelTiempoRestante" class="dataLabel">Tiempo restante para umbral:</div>
-                    <div id="tiempoRestante" class="dataValue">Preview</div>
-                </div>
-                
             </div>
         </div>
     </div>
