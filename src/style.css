@@ -323,9 +323,54 @@ body {
 }
 
 .chartContainer {
-    height: 280px;
+    height: 350px;
+    /* Aumentado de 280px a 350px para hacer el gráfico más grande */
     width: 100%;
     padding: var(--spacing-sm);
+    position: relative;
+}
+
+/* Estilos específicos para ECharts para mejorar el contraste */
+.chartContainer .echarts-tooltip {
+    background-color: rgba(42, 46, 53, 0.9) !important;
+    border: 1px solid var(--primary-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Estilos para los textos de ECharts */
+.chartContainer text {
+    fill: var(--text-color) !important;
+    font-weight: 500 !important;
+}
+
+/* Aumentar el contraste de las líneas de la cuadrícula */
+.chartContainer .echarts-grid-line {
+    stroke: rgba(255, 255, 255, 0.1) !important;
+    stroke-dasharray: 4, 4 !important;
+    /* Líneas discontinuas */
+}
+
+/* Hacer más visibles los ejes */
+.chartContainer .echarts-axis-line,
+.chartContainer .echarts-axis-tick {
+    stroke: var(--light-text) !important;
+    stroke-width: 1 !important;
+}
+
+* Estilos para las leyendas */ .chartContainer .echarts-legend {
+    background-color: rgba(42, 46, 53, 0.7) !important;
+    border-radius: 4px !important;
+    padding: 5px !important;
+}
+
+.chartContainer .echarts-legend-item-text {
+    color: var(--text-color) !important;
+}
+
+/* Mejorar visualización de títulos */
+.chartContainer .echarts-title {
+    font-weight: 600 !important;
+    color: var(--text-color) !important;
 }
 
 /* Data Panel Styles */
@@ -461,18 +506,47 @@ body {
         display: none;
     }
 
-    .chartHeader {
-        flex-direction: column;
-        align-items: flex-start;
+    .chartContainer {
+        height: 300px;
+        /* Un poco más pequeño en móviles */
     }
+}
 
-    .chartControls {
-        margin-top: 8px;
-    }
+/* Para garantizar que los botones del chart tengan buen contraste */
+.chartButton {
+    padding: 4px 12px;
+    border: none;
+    background: var(--background-color);
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    color: var(--light-text);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
 
-    .distributionButton {
-        width: 100%;
-    }
+.chartButton:hover {
+    background-color: rgba(255, 140, 0, 0.3);
+    color: var(--text-color);
+}
+
+.chartButton.active {
+    background-color: var(--primary-color);
+    color: var(--panel-background);
+    font-weight: 600;
+}
+
+.chartHeader {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.chartControls {
+    margin-top: 8px;
+}
+
+.distributionButton {
+    width: 100%;
 }
 
 /* Keep compatibility with existing classes */
