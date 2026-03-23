@@ -2,6 +2,7 @@ import { DOM } from './dom';
 import { AppState } from './state';
 import {
     inputPEntradaHist,
+    inputCaudalHist,
     startDateGlobal,
     endDateGlobal,
     $boton24h,
@@ -10,7 +11,39 @@ import {
     $boton30d
 } from '../src/main.js';
 
-// Función para formatear timestamps
+// 🔧 CONFIG TEMPORAL (luego mover a data.js dinámico)
+const CONFIG_LINEPACK = {
+    D: 0.4572,     // 18 pulgadas → metros
+    L: 129420,     // metros
+    Z: 1,
+    T: 288,        // Kelvin
+    R: 8.314
+};
+
+// ==============================
+// 🧠 CÁLCULOS
+// ==============================
+
+function calcularArea(D) {
+    return Math.PI * Math.pow(D, 2) / 4;
+}
+
+function calcularLinepack(P, config) {
+    const { D, L, Z, T, R } = config;
+    const A = calcularArea(D);
+
+    return (P * A * L) / (Z * R * T);
+}
+
+function calcularAutonomia(LP, Q) {
+    if (!Q || Q === 0) return null;
+    return LP / Q;
+}
+
+// ==============================
+// 🕒 FORMATOS
+// ==============================
+
 export function formatearTimestampHistorico(arrayTimestamps) {
     return arrayTimestamps.map(ts => {
         if (!ts) return '';
@@ -23,8 +56,11 @@ export function formatearTimestampHistorico(arrayTimestamps) {
     });
 }
 
-// Crear gráfico
-function createPressureChart() {
+// ==============================
+// 📊 GRÁFICO
+// ==============================
+
+function createLinepackChart() {
     if (typeof echarts === 'undefined') {
         console.error('ECharts no está cargada.');
         return;
@@ -39,113 +75,123 @@ function createPressureChart() {
         tooltip: {
             trigger: 'axis',
             formatter: params => {
-                const param = params[0];
-                const value = param.value;
-                return `${param.axisValueLabel}<br/>${param.marker} ${param.seriesName}: <strong>${typeof value === 'number' ? value.toFixed(2) : value}</strong>`;
+                const p = params[0];
+                return `${p.axisValueLabel}<br/>
+                ${p.marker} ${p.seriesName}: <strong>${p.value?.toFixed(2)}</strong>`;
             }
         },
-        legend: { data: ['Presión Entrada'], bottom: '0%' },
-        xAxis: { type: 'category', data: [] },
-        yAxis: {
-            type: 'value',
-            name: 'Presión (bar)',
-            scale: true,
-            axisLabel: { formatter: val => val.toFixed(2) }
+        legend: {
+            data: ['Linepack', 'Autonomía'],
+            bottom: '0%'
         },
+        xAxis: { type: 'category', data: [] },
+        yAxis: [
+            {
+                type: 'value',
+                name: 'Linepack',
+                scale: true
+            },
+            {
+                type: 'value',
+                name: 'Autonomía',
+                scale: true
+            }
+        ],
         dataZoom: [
             { type: 'inside', start: 0, end: 100 },
             { start: 0, end: 100 }
         ],
-        series: [{
-            name: 'Presión Entrada',
-            type: 'line',
-            data: [],
-            smooth: true,
-            markLine: {
-                symbol: 'none',
-                silent: true,
-                lineStyle: { type: 'dashed', color: '#FFA500', width: 2 },
-                data: [
-                    { yAxis: 80, label: { formatter: 'Alta', position: 'insideEndTop' } },
-                    { yAxis: AppState.minimoContractual, label: { formatter: 'Mínimo Contractual', position: 'insideEndTop' } }
-                ]
+        series: [
+            {
+                name: 'Linepack',
+                type: 'line',
+                data: [],
+                smooth: true
+            },
+            {
+                name: 'Autonomía',
+                type: 'line',
+                yAxisIndex: 1,
+                data: [],
+                smooth: true
             }
-        }]
+        ]
     };
 
     AppState.trendChart.setOption(option);
     AppState.trendChart.showLoading();
 
-    // Redimensionar al cambiar tamaño de ventana
     window.addEventListener('resize', () => {
         if (AppState.trendChart) AppState.trendChart.resize();
     });
 
-    console.log('Gráfico de presión inicializado correctamente.');
+    console.log('Gráfico de Linepack inicializado.');
 }
 
-// Actualizar datos
-export function updatePressureChart(data) {
-    if (!AppState.trendChart) return console.error('Gráfico no inicializado');
+// ==============================
+// 🔄 ACTUALIZACIÓN
+// ==============================
 
-    if (Array.isArray(data) && data[0]?.value !== undefined && data[0]?.timestamp !== undefined) {
-        const values = data.map(item => parseFloat(item.value));
-        const timestamps = formatearTimestampHistorico(data.map(item => item.timestamp));
+let bufferPresion = null;
+let bufferCaudal = null;
 
-        const max = Math.max(...values);
-        const min = Math.min(...values);
-        const y80 = min + (max - min) * 0.8;
+function intentarActualizarGrafico() {
+    if (!bufferPresion || !bufferCaudal) return;
 
-        AppState.trendChart.hideLoading();
+    const presiones = bufferPresion;
+    const caudales = bufferCaudal;
 
-        AppState.trendChart.setOption({
-            xAxis: { data: timestamps },
-            series: [{ data: values, markLine: { data: [{ yAxis: y80, label: { formatter: 'Alta' } }, { yAxis: AppState.minimoContractual, label: { formatter: 'Mínimo Contractual' } }] } }]
-        });
-    } else if (typeof data === 'object' && 'x' in data && 'up' in data) {
-        AppState.trendChart.hideLoading();
+    const timestamps = formatearTimestampHistorico(
+        presiones.map(p => p.timestamp)
+    );
 
-        AppState.trendChart.setOption({
-            xAxis: { data: data.x },
-            series: [{
-                name: 'Presión Entrada',
-                data: data.up,
-                markLine: {
-                    data: [{ yAxis: Math.max(...data.up) * 0.8, label: { formatter: 'Alta' } }, { yAxis: AppState.minimoContractual, label: { formatter: 'Mínimo Contractual' } }]
-                }
-            }]
-        });
+    const linepackValues = [];
+    const autonomiaValues = [];
+
+    for (let i = 0; i < presiones.length; i++) {
+        const P = parseFloat(presiones[i]?.value);
+        const Q = parseFloat(caudales[i]?.value);
+
+        const LP = calcularLinepack(P, CONFIG_LINEPACK);
+        const t = calcularAutonomia(LP, Q);
+
+        linepackValues.push(LP);
+        autonomiaValues.push(t);
     }
+
+    AppState.trendChart.hideLoading();
+
+    AppState.trendChart.setOption({
+        xAxis: { data: timestamps },
+        series: [
+            { name: 'Linepack', data: linepackValues },
+            { name: 'Autonomía', data: autonomiaValues }
+        ]
+    });
 }
 
-// Ajustar rango de tiempo usando EMBED
+// ==============================
+// ⏱ RANGO DE TIEMPO
+// ==============================
+
 function setRangoDeTiempo(dias = 1) {
-    if (!startDateGlobal || !endDateGlobal) {
-        return console.error('startDateGlobal y endDateGlobal necesarios');
-    }
+    if (!startDateGlobal || !endDateGlobal) return;
 
     const ahora = new Date();
-    const fechaInicio = new Date(ahora.getTime() - dias * 24 * 60 * 60 * 1000);
+    const inicio = new Date(ahora.getTime() - dias * 24 * 60 * 60 * 1000);
 
-    EMBED.submitTarget(startDateGlobal, fechaInicio.toISOString().split('.')[0]);
+    EMBED.submitTarget(startDateGlobal, inicio.toISOString().split('.')[0]);
     EMBED.submitTarget(endDateGlobal, ahora.toISOString().split('.')[0]);
-
-    console.log(`Rango de tiempo actualizado a ${dias} día(s)`);
 }
 
-// Manejo de botones
 function actualizarBotonActivo(botonActivo) {
-    // Quitar la clase 'active' de todos los botones
     $boton24h.removeClass('active');
     $boton7d.removeClass('active');
     $boton14d.removeClass('active');
     $boton30d.removeClass('active');
-    
-    // Agregar la clase 'active' solo al botón seleccionado
     $(botonActivo).addClass('active');
 }
 
-// Inicializar botones
 function inicializarBotones() {
     $boton24h.on('click', function () {
         actualizarBotonActivo(this);
@@ -167,22 +213,31 @@ function inicializarBotones() {
         setRangoDeTiempo(30);
     });
 
-    // Estado inicial CORRECTO
     actualizarBotonActivo($boton24h[0]);
     setRangoDeTiempo(1);
 }
 
-// Inicializar gráfico y botones
+// ==============================
+// 🚀 INIT
+// ==============================
+
 export function initChart() {
-    createPressureChart();
+    createLinepackChart();
     inicializarBotones();
 
-    // Suscribirse a cambios de datos
-    if (inputPEntradaHist && EMBED.fieldTypeIsQuery && EMBED.fieldTypeIsQuery(inputPEntradaHist)) {
-        EMBED.subscribeFieldToQueryChange(inputPEntradaHist, queryResult => {
-            if (!queryResult) return;
-            console.log('Datos de Presión de Entrada recibidos:', queryResult);
-            updatePressureChart(queryResult);
+    // Presión
+    if (inputPEntradaHist && EMBED.fieldTypeIsQuery(inputPEntradaHist)) {
+        EMBED.subscribeFieldToQueryChange(inputPEntradaHist, data => {
+            bufferPresion = data;
+            intentarActualizarGrafico();
+        });
+    }
+
+    // Caudal
+    if (inputCaudalHist && EMBED.fieldTypeIsQuery(inputCaudalHist)) {
+        EMBED.subscribeFieldToQueryChange(inputCaudalHist, data => {
+            bufferCaudal = data;
+            intentarActualizarGrafico();
         });
     }
 }
