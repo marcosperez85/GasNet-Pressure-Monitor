@@ -120,7 +120,9 @@ export function updatePressureChart(data) {
 
 // Ajustar rango de tiempo usando EMBED
 function setRangoDeTiempo(dias = 1) {
-    if (!startDateGlobal || !endDateGlobal) return console.error('startDateGlobal y endDateGlobal necesarios');
+    if (!startDateGlobal || !endDateGlobal) {
+        return console.error('startDateGlobal y endDateGlobal necesarios');
+    }
 
     const ahora = new Date();
     const fechaInicio = new Date(ahora.getTime() - dias * 24 * 60 * 60 * 1000);
@@ -133,19 +135,41 @@ function setRangoDeTiempo(dias = 1) {
 
 // Manejo de botones
 function actualizarBotonActivo(botonActivo) {
-    $boton24h.add($boton7d).add($boton14d).add($boton30d).removeClass('activo');
-    $(botonActivo).addClass('activo');
+    // Quitar la clase 'active' de todos los botones
+    $boton24h.removeClass('active');
+    $boton7d.removeClass('active');
+    $boton14d.removeClass('active');
+    $boton30d.removeClass('active');
+    
+    // Agregar la clase 'active' solo al botón seleccionado
+    $(botonActivo).addClass('active');
 }
 
 // Inicializar botones
 function inicializarBotones() {
-    $boton24h.on('click', function () { actualizarBotonActivo(this); setRangoDeTiempo(1); });
-    $boton7d.on('click', function () { actualizarBotonActivo(this); setRangoDeTiempo(7); });
-    $boton14d.on('click', function () { actualizarBotonActivo(this); setRangoDeTiempo(14); });
-    $boton30d.on('click', function () { actualizarBotonActivo(this); setRangoDeTiempo(30); });
+    $boton24h.on('click', function () {
+        actualizarBotonActivo(this);
+        setRangoDeTiempo(1);
+    });
 
-    // Trigger inicial
-    $boton24h.trigger('click');
+    $boton7d.on('click', function () {
+        actualizarBotonActivo(this);
+        setRangoDeTiempo(7);
+    });
+
+    $boton14d.on('click', function () {
+        actualizarBotonActivo(this);
+        setRangoDeTiempo(14);
+    });
+
+    $boton30d.on('click', function () {
+        actualizarBotonActivo(this);
+        setRangoDeTiempo(30);
+    });
+
+    // Estado inicial CORRECTO
+    actualizarBotonActivo($boton24h[0]);
+    setRangoDeTiempo(1);
 }
 
 // Inicializar gráfico y botones
