@@ -74,27 +74,57 @@ function createLinepackChart() {
     const option = {
         tooltip: {
             trigger: 'axis',
-            formatter: params => {
-                const p = params[0];
-                return `${p.axisValueLabel}<br/>
-                ${p.marker} ${p.seriesName}: <strong>${p.value?.toFixed(2)}</strong>`;
+            formatter: function(params) {
+                // Arreglamos el tooltip para mostrar ambas series
+                let result = params[0].axisValueLabel + '<br/>';
+                
+                // Iteramos sobre cada serie en el tooltip
+                params.forEach(param => {
+                    let value = param.value;
+                    let formattedValue = value !== null && value !== undefined 
+                        ? value.toFixed(2) 
+                        : 'N/A';
+                    
+                    result += `${param.marker} ${param.seriesName}: <strong>${formattedValue}</strong><br/>`;
+                });
+                
+                return result;
             }
         },
         legend: {
             data: ['Linepack', 'Autonomía'],
-            bottom: '0%'
+            top: '10px', // Movemos la leyenda a la parte superior
+            right: '10%',  // La alineamos a la derecha
+            textStyle: {
+                color: '#e0e0e0' // Mejor contraste
+            },
+            backgroundColor: 'rgba(42, 46, 53, 0.7)', // Fondo semi-transparente
+            borderRadius: 4,
+            padding: 5
         },
         xAxis: { type: 'category', data: [] },
         yAxis: [
             {
                 type: 'value',
                 name: 'Linepack',
-                scale: true
+                scale: true,
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed',
+                        color: 'rgba(255, 140, 0, 0.2)' // Color para líneas de Linepack
+                    }
+                }
             },
             {
                 type: 'value',
                 name: 'Autonomía',
-                scale: true
+                scale: true,
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed',
+                        color: 'rgba(76, 175, 80, 0.2)' // Color para líneas de Autonomía
+                    }
+                }
             }
         ],
         dataZoom: [
@@ -106,14 +136,20 @@ function createLinepackChart() {
                 name: 'Linepack',
                 type: 'line',
                 data: [],
-                smooth: true
+                smooth: true,
+                itemStyle: {
+                    color: '#ff8c00' // Color para Linepack
+                }
             },
             {
                 name: 'Autonomía',
                 type: 'line',
                 yAxisIndex: 1,
                 data: [],
-                smooth: true
+                smooth: true,
+                itemStyle: {
+                    color: '#4caf50' // Color para Autonomía
+                }
             }
         ]
     };
