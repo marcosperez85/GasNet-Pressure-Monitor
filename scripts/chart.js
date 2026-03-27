@@ -2,6 +2,7 @@ import { DOM } from './dom';
 import { AppState } from './state';
 import {
     inputPEntradaHist,
+    inputPSalidaHist,
     inputCaudalHist,
     startDateGlobal,
     endDateGlobal,
