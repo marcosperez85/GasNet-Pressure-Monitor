@@ -7,8 +7,8 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "1.0.8",
-		"updated": "22/03/2026",
+		"version": "1.6.0",
+		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
 	},
@@ -25,6 +25,10 @@
 		"JSONSchema": {
 			"inputPEntradaHist": {
 				"title": "Presion de Entrada Historica",
+				"$ref": "#/definitions/dataSource"
+			},
+			"inputPSalidaHist": {
+				"title": "Presion de Salida Historica",
 				"$ref": "#/definitions/dataSource"
 			},
 			"inputCaudalHist": {
@@ -48,6 +52,9 @@
 			"inputPEntradaHist": {
 				"ui:field": "dataSource"
 			},
+			"inputPSalidaHist": {
+				"ui:field": "dataSource"
+			},
 			"inputCaudalHist": {
 				"ui:field": "dataSource"
 			},
@@ -66,6 +73,14 @@
 		{
 			"title": "Boton de Camu Bot",
 			"id": "onClickedCamuBotButton"
+		},
+		{
+			"title": "Boton de Dashboard",
+			"id": "onClickedDashboardButton"
+		},
+				{
+			"title": "Boton de Settings",
+			"id": "onClickedSettingsButton"
 		}
 	],
 	"defaultConfiguration": {
