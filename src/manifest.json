@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "1.6.0",
+		"version": "1.8.1",
 		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -23,12 +23,12 @@
 	"schema": {
 		"draggable": true,
 		"JSONSchema": {
-			"inputPEntradaHist": {
-				"title": "Presion de Entrada Historica",
+			"inputPEntradaUpHist": {
+				"title": "Presion de Entrada Upstream Historica",
 				"$ref": "#/definitions/dataSource"
 			},
-			"inputPSalidaHist": {
-				"title": "Presion de Salida Historica",
+			"inputPEntradaDownHist": {
+				"title": "Presion de Entrada Downstream Historica",
 				"$ref": "#/definitions/dataSource"
 			},
 			"inputCaudalHist": {
@@ -49,10 +49,10 @@
 			}
 		},
 		"UISchema": {
-			"inputPEntradaHist": {
+			"inputPEntradaUpHist": {
 				"ui:field": "dataSource"
 			},
-			"inputPSalidaHist": {
+			"inputPEntradaDownHist": {
 				"ui:field": "dataSource"
 			},
 			"inputCaudalHist": {
