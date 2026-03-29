@@ -8,8 +8,8 @@ let data = EMBED.getComponent().schema.data;
 
 // Exportar variables directamente para otros módulos
 export const $GOOGLE_MAPS_API_KEY = data.GOOGLE_MAPS_API_KEY.manual;
-export const inputPEntradaHist = data.inputPEntradaHist;
-export const inputPSalidaHist = data.inputPSalidaHist;
+export const inputPEntradaUpHist = data.inputPEntradaUpHist;
+export const inputPEntradaDownHist = data.inputPEntradaDownHist;
 export const inputCaudalHist = data.inputCaudalHist;
 export const startDateGlobal = data.startDateGlobal;
 export const endDateGlobal = data.endDateGlobal;
