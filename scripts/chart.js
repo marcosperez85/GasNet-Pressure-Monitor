@@ -1,8 +1,8 @@
 import { DOM } from './dom';
 import { AppState } from './state';
 import {
-    inputPEntradaHist,
-    inputPSalidaHist,
+    inputPEntradaUpHist,
+    inputPEntradaDownHist,
     inputCaudalHist,
     startDateGlobal,
     endDateGlobal,
@@ -169,27 +169,33 @@ function createLinepackChart() {
 // 🔄 ACTUALIZACIÓN
 // ==============================
 
-let bufferPresion = null;
+let bufferPresionUp = null;
+let bufferPresionDown = null;
 let bufferCaudal = null;
 
 function intentarActualizarGrafico() {
-    if (!bufferPresion || !bufferCaudal) return;
+    if (!bufferPresionUp || !bufferPresionDown || !bufferCaudal) return;
 
-    const presiones = bufferPresion;
+    const presionesUp = bufferPresionUp;
+    const presionesDown = bufferPresionDown;
     const caudales = bufferCaudal;
 
     const timestamps = formatearTimestampHistorico(
-        presiones.map(p => p.timestamp)
+        presionesUp.map(p => p.timestamp)
     );
 
     const linepackValues = [];
     const autonomiaValues = [];
 
-    for (let i = 0; i < presiones.length; i++) {
-        const P = parseFloat(presiones[i]?.value);
+    for (let i = 0; i < presionesUp.length; i++) {
+        const P_up = parseFloat(presionesUp[i]?.value);
+        const P_down = parseFloat(presionesDown[i]?.value);
         const Q = parseFloat(caudales[i]?.value);
 
-        const LP = calcularLinepack(P, CONFIG_LINEPACK);
+        // 🔥 Promedio correcto
+        const P_prom = (P_up + P_down) / 2;
+
+        const LP = calcularLinepack(P_prom, CONFIG_LINEPACK);
         const t = calcularAutonomia(LP, Q);
 
         linepackValues.push(LP);
@@ -262,10 +268,18 @@ export function initChart() {
     createLinepackChart();
     inicializarBotones();
 
-    // Presión
-    if (inputPEntradaHist && EMBED.fieldTypeIsQuery(inputPEntradaHist)) {
-        EMBED.subscribeFieldToQueryChange(inputPEntradaHist, data => {
-            bufferPresion = data;
+    // Presión upstream
+    if (inputPEntradaUpHist && EMBED.fieldTypeIsQuery(inputPEntradaUpHist)) {
+        EMBED.subscribeFieldToQueryChange(inputPEntradaUpHist, data => {
+            bufferPresionUp = data;
+            intentarActualizarGrafico();
+        });
+    }
+
+    // Presión downstream
+    if (inputPEntradaDownHist && EMBED.fieldTypeIsQuery(inputPEntradaDownHist)) {
+        EMBED.subscribeFieldToQueryChange(inputPEntradaDownHist, data => {
+            bufferPresionDown = data;
             intentarActualizarGrafico();
         });
     }
