@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "1.8.1",
+		"version": "2.0.0",
 		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -35,6 +35,18 @@
 				"title": "Caudal Historico",
 				"$ref": "#/definitions/dataSource"
 			},
+			"pEntradaUpGlobal": {
+				"title": "Global de P-Entrada Upstream",
+				"$ref": "#/definitions/dataTarget"
+			},
+			"pEntradaDownGlobal": {
+				"title": "Global de P-Entrada Downstream",
+				"$ref": "#/definitions/dataTarget"
+			},
+			"caudalGlobal": {
+				"title": "Global de Caudal",
+				"$ref": "#/definitions/dataTarget"
+			},
 			"startDateGlobal": {
 				"title": "Fecha de inicio",
 				"$ref": "#/definitions/dataTarget"
@@ -58,6 +70,15 @@
 			"inputCaudalHist": {
 				"ui:field": "dataSource"
 			},
+			"pEntradaUpGlobal": {
+				"ui:field": "dataTarget"
+			},
+			"pEntradaDownGlobal": {
+				"ui:field": "dataTarget"
+			},
+			"caudalGlobal": {
+				"ui:field": "dataTarget"
+			},
 			"startDateGlobal": {
 				"ui:field": "dataTarget"
 			},
@@ -78,7 +99,7 @@
 			"title": "Boton de Dashboard",
 			"id": "onClickedDashboardButton"
 		},
-				{
+		{
 			"title": "Boton de Settings",
 			"id": "onClickedSettingsButton"
 		}
