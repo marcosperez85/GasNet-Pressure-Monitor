@@ -1,8 +1,14 @@
 import { DOM } from './dom';
 import { MEASUREMENT_POINTS } from './data';
+import { AppState } from './state';
+import { pEntradaUpGlobal, pEntradaDownGlobal, caudalGlobal } from '../src/main.js';
 
 function createSegmentItem(point) {
     const $item = $('<div></div>').addClass('segmentItem');
+
+    $item.on('click', function () {
+        seleccionarPunto(point);
+    });
 
     $item.html(`
         <div class="segmentTitle">${point.title}</div>
@@ -24,12 +30,12 @@ function createSegmentItem(point) {
 }
 
 export function updateMeasurementPoints(unit) {
-     if (MEASUREMENT_POINTS[unit]) {
+    if (MEASUREMENT_POINTS[unit]) {
         $(DOM.noSelection).addClass('hidden');
         $(DOM.segmentList).removeClass('hidden');
         $(DOM.segmentList).empty();
 
-        $.each(MEASUREMENT_POINTS[unit], function(i, p) {
+        $.each(MEASUREMENT_POINTS[unit], function (i, p) {
             $(DOM.segmentList).append(createSegmentItem(p));
         });
     } else {
@@ -44,18 +50,38 @@ export function setupDistributionZones() {
     const $pampeanaSegments = $('.pampeana-segments');
     const $surSegments = $('.sur-segments');
 
-    $pampeanaButton.on('click', function() {
+    $pampeanaButton.on('click', function () {
         $pampeanaSegments.toggleClass('active');
     });
 
-    $surButton.on('click', function() {
+    $surButton.on('click', function () {
         $surSegments.toggleClass('active');
     });
 
-    $('.zoneSegment').on('click', function() {
+    $('.zoneSegment').on('click', function () {
         $('.zoneSegment').removeClass('active');
         $(this).addClass('active');
 
         updateMeasurementPoints($(this).text().trim());
     });
+}
+
+function seleccionarPunto(point) {
+    AppState.selectedPoint = point;
+
+    console.log('Punto seleccionado:', point);
+
+    // 🔥 Setear queries en OpHub
+    EMBED.submitTarget(pEntradaUpGlobal, point.queries.pEntradaUp);
+    EMBED.submitTarget(pEntradaDownGlobal, point.queries.pEntradaDown);
+    EMBED.submitTarget(caudalGlobal, point.queries.caudal);
+
+    // 🔥 Mostrar chart
+    const chartPanel = document.querySelector('.chartPanel');
+    chartPanel.classList.remove('noExiste');
+
+    // 🔥 Forzar refresh
+    if (typeof window.refrescarGrafico === 'function') {
+        window.refrescarGrafico();
+    }
 }
