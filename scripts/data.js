@@ -31,7 +31,29 @@ export const MEASUREMENT_POINTS = {
 
     ],
     'Mar del Plata': [
-        { title: 'Sistema Tandil - MDP', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
+        {
+            title: 'Sistema Tandil - MDP',
+            subtitle: 'Conexión regional',
+
+            // 🔥 QUERIES
+            queries: {
+                pEntradaUp: 'webhmi-model://PM 203 - El Chourron/P-Entrada',
+                pEntradaDown: 'webhmi-model://Invernada L1/P-Entrada',
+                caudal: 'webhmi-model://PM 203 - El Chourron/Q-Inst'
+            },
+
+            // 🔥 CONFIG FÍSICA
+            config: {
+                D: 0.4572,
+                L: 157900,
+                Z: 1,
+                T: 288,
+                R: 8.314
+            },
+
+            linepack: '7.2 Sm3',
+            pressure: '46.3 bar'
+        },
         { title: 'Sistema de la Costa', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
         { title: 'Sistema Balcarce', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' },
         { title: 'Sistema MDP Ciudad', subtitle: 'Distribución urbana', linepack: '6.4 Sm3', pressure: '44.1 bar' }
