@@ -12,15 +12,6 @@ import {
     $boton30d
 } from '../src/main.js';
 
-// 🔧 CONFIG TEMPORAL (luego mover a data.js dinámico)
-const CONFIG_LINEPACK = {
-    D: 0.4572,     // 18 pulgadas → metros
-    L: 129420,     // metros
-    Z: 1,
-    T: 288,        // Kelvin
-    R: 8.314
-};
-
 // ==============================
 // 🧠 CÁLCULOS
 // ==============================
@@ -75,20 +66,20 @@ function createLinepackChart() {
     const option = {
         tooltip: {
             trigger: 'axis',
-            formatter: function(params) {
+            formatter: function (params) {
                 // Arreglamos el tooltip para mostrar ambas series
                 let result = params[0].axisValueLabel + '<br/>';
-                
+
                 // Iteramos sobre cada serie en el tooltip
                 params.forEach(param => {
                     let value = param.value;
-                    let formattedValue = value !== null && value !== undefined 
-                        ? value.toFixed(2) 
+                    let formattedValue = value !== null && value !== undefined
+                        ? value.toFixed(2)
                         : 'N/A';
-                    
+
                     result += `${param.marker} ${param.seriesName}: <strong>${formattedValue}</strong><br/>`;
                 });
-                
+
                 return result;
             }
         },
@@ -103,16 +94,41 @@ function createLinepackChart() {
             borderRadius: 4,
             padding: 5
         },
-        xAxis: { type: 'category', data: [] },
+        xAxis: {
+            type: 'category',
+            data: [],
+            axisLine: {
+                lineStyle: { color: '#e0e0e0' }
+            },
+            axisLabel: {
+                color: '#e0e0e0',
+                fontSize: 12
+            },
+            nameTextStyle: {
+                color: '#e0e0e0'
+            }
+        },
         yAxis: [
             {
                 type: 'value',
                 name: 'Linepack',
                 scale: true,
+                axisLine: {
+                    lineStyle: { color: '#e0e0e0' }
+                },
+                axisLabel: {
+                    color: '#e0e0e0',
+                    fontSize: 12
+                },
+                nameTextStyle: {
+                    color: '#ff8c00',
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                },
                 splitLine: {
                     lineStyle: {
                         type: 'dashed',
-                        color: 'rgba(255, 140, 0, 0.2)' // Color para líneas de Linepack
+                        color: '#ff8c00' // Color para líneas de Linepack
                     }
                 }
             },
@@ -120,10 +136,22 @@ function createLinepackChart() {
                 type: 'value',
                 name: 'Autonomía',
                 scale: true,
+                axisLine: {
+                    lineStyle: { color: '#e0e0e0' }
+                },
+                axisLabel: {
+                    color: '#e0e0e0',
+                    fontSize: 12
+                },
+                nameTextStyle: {
+                    color: '#4caf50',
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                },
                 splitLine: {
                     lineStyle: {
                         type: 'dashed',
-                        color: 'rgba(76, 175, 80, 0.2)' // Color para líneas de Autonomía
+                        color: '#4caf50' // Color para líneas de Autonomía
                     }
                 }
             }
@@ -195,7 +223,9 @@ function intentarActualizarGrafico() {
         // 🔥 Promedio correcto
         const P_prom = (P_up + P_down) / 2;
 
-        const LP = calcularLinepack(P_prom, CONFIG_LINEPACK);
+        if (!AppState.selectedPoint) return;
+        const config = AppState.selectedPoint.config;
+        const LP = calcularLinepack(P_prom, config);
         const t = calcularAutonomia(LP, Q);
 
         linepackValues.push(LP);
@@ -268,6 +298,9 @@ export function initChart() {
     createLinepackChart();
     inicializarBotones();
 
+    // Inicialmente el chart está invisible hasta que se selecciona un punto
+    toggleChartVisibility(false);
+
     // Presión upstream
     if (inputPEntradaUpHist && EMBED.fieldTypeIsQuery(inputPEntradaUpHist)) {
         EMBED.subscribeFieldToQueryChange(inputPEntradaUpHist, data => {
@@ -292,3 +325,21 @@ export function initChart() {
         });
     }
 }
+
+// ==============================
+// 🚀 VISIBILIDAD DEL CHART
+// ==============================
+
+function toggleChartVisibility(show) {
+    const chartPanel = document.querySelector('.chartPanel');
+
+    if (show) {
+        chartPanel.classList.remove('noExiste');
+    } else {
+        chartPanel.classList.add('noExiste');
+    }
+}
+
+window.refrescarGrafico = () => {
+    intentarActualizarGrafico();
+};
