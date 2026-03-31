@@ -142,6 +142,8 @@ body {
 #mainContent {
     display: flex;
     margin: 0 1.5rem;
+    /* Ajuste para ocupar todo el alto disponible */
+    height: calc(100vh - 80px);
 }
 
 /* Left Sidebar for Distribution Zones */
@@ -264,6 +266,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    /* Ocupar todo el alto del contenedor padre */
+    height: 100%;
 }
 
 .mapArea {
@@ -274,7 +278,8 @@ body {
     box-shadow: var(--shadow-sm);
     position: relative;
     border: 1px solid var(--border-color);
-    min-height: 400px;
+    /* Ocupar todo el alto disponible */
+    height: 100%;
 }
 
 /* Chart Panel Styles */
@@ -285,6 +290,8 @@ body {
     margin-top: 1rem;
     box-shadow: var(--shadow-sm);
     overflow: hidden;
+    /* Altura fija para el panel del gráfico */
+    height: 400px;
 }
 
 .chartHeader {
@@ -325,7 +332,8 @@ body {
 .chartContainer {
     height: 350px;
     width: 100%;
-    padding: 0.25rem 0; /* menos padding horizontal */
+    padding: 0.25rem 0;
+    /* menos padding horizontal */
     position: relative;
 }
 
@@ -344,7 +352,8 @@ body {
 /* Aumentar el contraste de las líneas de la cuadrícula */
 .chartContainer .echarts-grid-line {
     stroke: rgba(255, 255, 255, 0.1) !important;
-    stroke-dasharray: 4, 4 !important; /* Líneas discontinuas */
+    stroke-dasharray: 4, 4 !important;
+    /* Líneas discontinuas */
 }
 
 /* Hacer más visibles los ejes */
@@ -451,6 +460,8 @@ body {
 @media screen and (max-width: 1400px) {
     #mainContent {
         flex-direction: column;
+        /* Permitir que crezca en pantallas pequeñas */
+        height: auto;
     }
 
     .leftSidebar,
