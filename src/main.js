@@ -11,6 +11,9 @@ export const $GOOGLE_MAPS_API_KEY = data.GOOGLE_MAPS_API_KEY.manual;
 export const inputPEntradaUpHist = data.inputPEntradaUpHist;
 export const inputPEntradaDownHist = data.inputPEntradaDownHist;
 export const inputCaudalHist = data.inputCaudalHist;
+export const pEntradaUpGlobal = data.pEntradaUpGlobal;
+export const pEntradaDownGlobal = data.pEntradaDownGlobal;
+export const caudalGlobal = data.caudalGlobal;
 export const startDateGlobal = data.startDateGlobal;
 export const endDateGlobal = data.endDateGlobal;
 
