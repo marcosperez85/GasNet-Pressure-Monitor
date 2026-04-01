@@ -2,7 +2,6 @@ import { setupDistributionZones } from '../scripts/sidebar.js';
 import { setupNavigation } from '../scripts/navigation.js';
 import { initChart } from '../scripts/chart.js';
 import { loadMap } from '../scripts/map.js';
-import { stringURLs } from '../scripts/crearStringURL.js';
 
 let rootElement = EMBED.getRootElement();
 let data = EMBED.getComponent().schema.data;
@@ -15,6 +14,7 @@ export const inputCaudalHist = data.inputCaudalHist;
 export const pEntradaUpGlobal = data.pEntradaUpGlobal;
 export const pEntradaDownGlobal = data.pEntradaDownGlobal;
 export const caudalGlobal = data.caudalGlobal;
+export const stringURLsGlobal = data.stringURLsGlobal;
 export const startDateGlobal = data.startDateGlobal;
 export const endDateGlobal = data.endDateGlobal;
 
