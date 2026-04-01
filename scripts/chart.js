@@ -1,9 +1,11 @@
 import { DOM } from './dom';
 import { AppState } from './state';
+import { stringURLs } from '../scripts/crearStringURL.js';
 import {
     inputPEntradaUpHist,
     inputPEntradaDownHist,
     inputCaudalHist,
+    stringURLsGlobal,
     startDateGlobal,
     endDateGlobal,
     $boton24h,
@@ -306,6 +308,8 @@ export function initChart() {
         EMBED.subscribeFieldToQueryChange(inputPEntradaUpHist, data => {
             bufferPresionUp = data;
             intentarActualizarGrafico();
+            enviarCurrentValueQuery();
+
         });
     }
 
@@ -314,6 +318,7 @@ export function initChart() {
         EMBED.subscribeFieldToQueryChange(inputPEntradaDownHist, data => {
             bufferPresionDown = data;
             intentarActualizarGrafico();
+            enviarCurrentValueQuery();
         });
     }
 
@@ -322,6 +327,7 @@ export function initChart() {
         EMBED.subscribeFieldToQueryChange(inputCaudalHist, data => {
             bufferCaudal = data;
             intentarActualizarGrafico();
+            enviarCurrentValueQuery();
         });
     }
 }
@@ -343,3 +349,11 @@ function toggleChartVisibility(show) {
 window.refrescarGrafico = () => {
     intentarActualizarGrafico();
 };
+
+// ==============================
+// 🚀 QUERY DE CURRENT VALUE CON STRING DE URLS
+// ==============================
+
+function enviarCurrentValueQuery() {
+    EMBED.submitTarget(stringURLsGlobal, stringURLs)
+}
