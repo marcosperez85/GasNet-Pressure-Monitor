@@ -24,7 +24,7 @@ function crearURLs() {
                 const urlCaudal = inicioURL + punto.nombres.puntoUpstream + "/" + caudal;
                 
                 // Agregamos las URLs concatenadas al array
-                stringURLs.push(urlPEntradaUp + ", " + urlPEntradaDown + ", " + urlCaudal);
+                stringURLs.push(urlPEntradaUp + "," + urlPEntradaDown + "," + urlCaudal);
                 
                 // Registramos para depuración
                 console.log(`URLs para ${punto.title}:`);
@@ -34,7 +34,7 @@ function crearURLs() {
                 console.log('-------------------');
             } else if (punto.queries && punto.queries.pEntradaUp && punto.queries.pEntradaDown && punto.queries.caudal) {
                 // Si no hay nombres pero sí queries, usamos esas URLs
-                stringURLs.push(punto.queries.pEntradaUp + ", " + punto.queries.pEntradaDown + ", " + punto.queries.caudal);
+                stringURLs.push(punto.queries.pEntradaUp + "," + punto.queries.pEntradaDown + "," + punto.queries.caudal);
                 
                 // Registramos para depuración
                 console.log(`URLs para ${punto.title} (desde queries):`);
@@ -47,7 +47,7 @@ function crearURLs() {
     }
     
     // Unimos todas las URLs en un solo string
-    return stringURLs.join(', ');
+    return stringURLs.join(',');
 }
 
 // Ejecutamos la función y guardamos el resultado
