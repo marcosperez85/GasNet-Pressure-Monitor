@@ -2,6 +2,7 @@ import { setupDistributionZones } from '../scripts/sidebar.js';
 import { setupNavigation } from '../scripts/navigation.js';
 import { initChart } from '../scripts/chart.js';
 import { loadMap } from '../scripts/map.js';
+import { stringURLs } from '../scripts/crearStringURL.js';
 
 let rootElement = EMBED.getRootElement();
 let data = EMBED.getComponent().schema.data;
