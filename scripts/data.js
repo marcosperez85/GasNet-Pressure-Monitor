@@ -35,6 +35,11 @@ export const MEASUREMENT_POINTS = {
             title: 'Sistema Tandil - MDP',
             subtitle: '037-001',
 
+            nombres: {
+                puntoUpstream: 'PM 203 - El Chourron',
+                puntoDownstream: 'Invernada L1',
+            },
+
             // 🔥 QUERIES
             queries: {
                 pEntradaUp: 'webhmi-model://PM 203 - El Chourron/P-Entrada',
@@ -57,6 +62,11 @@ export const MEASUREMENT_POINTS = {
         {
             title: 'Sistema de la Costa',
             subtitle: '036-026',
+
+            nombres: {
+                puntoUpstream: 'PM 203 - El Chourron',
+                puntoDownstream: 'C E Gesell',
+            },
 
             // 🔥 QUERIES
             queries: {
@@ -81,6 +91,11 @@ export const MEASUREMENT_POINTS = {
             title: 'Sistema Balcarce',
             subtitle: 'Conexión regional',
 
+            nombres: {
+                puntoUpstream: 'Balcarce I',
+                puntoDownstream: 'La Susana',
+            },
+
             // 🔥 QUERIES
             queries: {
                 pEntradaUp: 'webhmi-model://Balcarce I/P-Entrada',
@@ -103,6 +118,12 @@ export const MEASUREMENT_POINTS = {
         {
             title: 'Sistema MDP Ciudad',
             subtitle: 'Conexión regional',
+
+            nombres: {
+                puntoUpstream: 'PM 203 - El Chourron',
+                puntoDownstream: 'Central 9 de Julio',
+            },
+
 
             // 🔥 QUERIES
             queries: {
