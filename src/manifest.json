@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "2.0.0",
+		"version": "2.1.0",
 		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -47,6 +47,10 @@
 				"title": "Global de Caudal",
 				"$ref": "#/definitions/dataTarget"
 			},
+			"stringURLsGlobal": {
+				"title": "Global de string de URLs",
+				"$ref": "#/definitions/dataTarget"
+			},
 			"startDateGlobal": {
 				"title": "Fecha de inicio",
 				"$ref": "#/definitions/dataTarget"
@@ -77,6 +81,9 @@
 				"ui:field": "dataTarget"
 			},
 			"caudalGlobal": {
+				"ui:field": "dataTarget"
+			},
+			"stringURLsGlobal": {
 				"ui:field": "dataTarget"
 			},
 			"startDateGlobal": {
