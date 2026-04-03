@@ -34,52 +34,91 @@ export const $boton30d = rootElement.find("#boton30d");
 // Variable global para las URLs generadas
 export let stringURLs;
 
-$(document).ready(async function () {
+/**
+ * Configura la interfaz de usuario (sidebars, navegación)
+ */
+function setupUI() {
     setupDistributionZones();
     setupNavigation();
+}
 
-    // Generamos las URLs y las asignamos a la variable global
+/**
+ * Genera y procesa las URLs para las consultas
+ * @returns {string} URLs procesadas y sin duplicados
+ */
+function setupURLs() {
     const urlsGeneradas = crearURLs();
-    stringURLs = limpiarURLs(urlsGeneradas);
+    const urlsLimpias = limpiarURLs(urlsGeneradas);
     
-    console.log("URLs generadas y limpiadas:", stringURLs);
-
+    console.log("URLs generadas y limpiadas:", urlsLimpias);
+    
     if (stringURLsGlobal) {
-        EMBED.submitTarget(stringURLsGlobal, stringURLs);
+        EMBED.submitTarget(stringURLsGlobal, urlsLimpias);
     } else {
         console.log("No se pudo enviar el query de current values");
     }
+    
+    return urlsLimpias;
+}
 
-    if (currentValueDataset && EMBED.fieldTypeIsQuery(currentValueDataset)) {
-        EMBED.subscribeFieldToQueryChange(currentValueDataset, data => {
-            console.log("SUBSCRIPCIÓN OK");
-
-            if (!data) {
-                console.log("No hay datos recibidos");
-                return;
-            }
-
-            // Forma correcta de inspeccionar objetos en la consola
-            console.log("La variable DATA en crudo es:", data);
-                        
-            // Para ver la estructura exacta del objeto
-            console.log("Estructura completa de DATA[0]:", JSON.stringify(data[0], null, 2));
-            
-            // Si necesitas ver propiedades específicas
-            if (data[0]) {
-                console.log("Propiedades disponibles en DATA[0]:", Object.keys(data[0]));
-            }
-
-            try {
-                const processed = procesarCurrentValues(data);
-                console.log("Los datos procesados son:", processed);
-                actualizarSidebarConDatos(processed);
-            } catch (error) {
-                console.error("Error al procesar los datos:", error);
-                console.log("Datos que causaron el error:", data);
-            }
-        });
+/**
+ * Configura la suscripción a los cambios en los valores actuales
+ */
+function setupDataSubscriptions() {
+    if (!currentValueDataset || !EMBED.fieldTypeIsQuery(currentValueDataset)) {
+        console.log("No hay dataset configurado o no es un query");
+        return;
     }
+    
+    EMBED.subscribeFieldToQueryChange(currentValueDataset, handleDataUpdate);
+}
+
+/**
+ * Maneja las actualizaciones de datos desde el servidor
+ * @param {Array} data - Datos recibidos del servidor
+ */
+function handleDataUpdate(data) {
+    console.log("SUBSCRIPCIÓN OK");
+
+    if (!data) {
+        console.log("No hay datos recibidos");
+        return;
+    }
+
+    // Logging para debug
+    console.log("La variable DATA en crudo es:", data);
+    if (data[0]) {
+        console.log("Estructura completa de DATA[0]:", JSON.stringify(data[0], null, 2));
+        console.log("Propiedades disponibles en DATA[0]:", Object.keys(data[0]));
+    }
+
+    try {
+        const processed = procesarCurrentValues(data);
+        console.log("Los datos procesados son:", processed);
+        actualizarSidebarConDatos(processed);
+    } catch (error) {
+        console.error("Error al procesar los datos:", error);
+        console.log("Datos que causaron el error:", data);
+    }
+}
+
+/**
+ * Inicializa los componentes visuales (mapa, gráfico)
+ */
+function setupVisualComponents() {
     initChart();
     loadMap($GOOGLE_MAPS_API_KEY);
-});
+}
+
+/**
+ * Función principal de inicialización
+ */
+function initialize() {
+    setupUI();
+    stringURLs = setupURLs();
+    setupDataSubscriptions();
+    setupVisualComponents();
+}
+
+// Punto de entrada principal cuando el DOM está cargado
+$(document).ready(initialize);
