@@ -1,7 +1,13 @@
 import { DOM } from './dom';
 import { MEASUREMENT_POINTS } from './data';
 import { AppState } from './state';
-import { pEntradaUpGlobal, pEntradaDownGlobal, caudalGlobal } from '../src/main.js';
+import {
+    pEntradaUpGlobal,
+    pEntradaDownGlobal,
+    caudalGlobal
+} from '../src/main.js';
+
+
 
 function createSegmentItem(point) {
     const $item = $('<div></div>').addClass('segmentItem');
@@ -11,19 +17,19 @@ function createSegmentItem(point) {
     });
 
     $item.html(`
-        <div class="segmentTitle">${point.title}</div>
-        <div class="segmentSubtitle">${point.subtitle}</div>
-        <div class="segmentMetrics">
-            <div>
-                <div class="metricLabel">Line Pack</div>
-                <div class="metricValue">${point.linepack}</div>
-            </div>
-            <div>
-                <div class="metricLabel">Pressure</div>
-                <div class="metricValue">${point.pressure}</div>
-            </div>
+    <div class="segmentTitle">${point.title}</div>
+    <div class="segmentSubtitle">${point.subtitle}</div>
+    <div class="segmentMetrics">
+        <div>
+            <div class="metricLabel">Line Pack</div>
+            <div class="metricValue linepack-value">--</div>
         </div>
-    `);
+        <div>
+            <div class="metricLabel">Pressure</div>
+            <div class="metricValue pressure-value">--</div>
+        </div>
+    </div>
+`);
 
     setTimeout(() => $item.css('opacity', 1), 50);
     return $item[0];
@@ -84,4 +90,38 @@ function seleccionarPunto(point) {
     if (typeof window.refrescarGrafico === 'function') {
         window.refrescarGrafico();
     }
+}
+
+export function actualizarSidebarConDatos(dataProcesada) {
+    $('.segmentItem').each(function () {
+        const title = $(this).find('.segmentTitle').text().trim();
+        const d = dataProcesada[title];
+
+        if (!d) {
+            $(this).find('.linepack-value').text('N/A');
+            $(this).find('.pressure-value').text('N/A');
+            return;
+        }
+
+        const pressure = d.pressure;
+
+        // 🔥 SCADA COLORS
+        let color = 'gray';
+
+        if (pressure > 60) color = '#4caf50';       // verde
+        else if (pressure > 45) color = '#ff9800';  // amarillo
+        else color = '#f44336';                     // rojo
+
+        $(this).css('border-left', `5px solid ${color}`);
+
+        $(this).find('.linepack-value').text(d.linepack.toFixed(2));
+        $(this).find('.pressure-value').text(pressure.toFixed(2));
+
+        console.log('Processed:', dataProcesada);
+    });
+}
+
+function ordenarPorCriticidad(dataProcesada) {
+    return Object.entries(dataProcesada)
+        .sort((a, b) => a[1].pressure - b[1].pressure); // menor presión = más crítico
 }
