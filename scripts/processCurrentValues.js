@@ -16,22 +16,29 @@ export function procesarCurrentValues(dataset) {
         });
     }
 
-    // 🔹 Mapear dataset → puntos
+    // 🔹 Mapear dataset
     dataset.forEach(d => {
-        const name = d.name;
+        if (!d.name) return;
+
+        const [punto, variable] = d.name.split('/');
+        const value = parseFloat(d.value);
 
         for (const unidad in MEASUREMENT_POINTS) {
             MEASUREMENT_POINTS[unidad].forEach(p => {
 
                 if (!p.nombres) return;
 
-                const upTag = `webhmi-model://${p.nombres.puntoUpstream}/P-Entrada`;
-                const downTag = `webhmi-model://${p.nombres.puntoDownstream}/P-Entrada`;
-                const qTag = `webhmi-model://${p.nombres.puntoUpstream}/Q-Inst`;
+                if (punto === p.nombres.puntoUpstream && variable === 'P-Entrada') {
+                    resultado[p.title].up = value;
+                }
 
-                if (name === upTag) resultado[p.title].up = parseFloat(d.value);
-                if (name === downTag) resultado[p.title].down = parseFloat(d.value);
-                if (name === qTag) resultado[p.title].q = parseFloat(d.value);
+                if (punto === p.nombres.puntoDownstream && variable === 'P-Entrada') {
+                    resultado[p.title].down = value;
+                }
+
+                if (punto === p.nombres.puntoUpstream && variable === 'Q-Inst') {
+                    resultado[p.title].q = value;
+                }
             });
         }
     });
@@ -39,10 +46,11 @@ export function procesarCurrentValues(dataset) {
     // 🔹 Calcular linepack
     const enriched = {};
 
-    for (const key in resultado) {
+    for (const key in resultado) {  
+        console.log("Resultado parcial:", resultado);
         const r = resultado[key];
 
-        if (r.up && r.down) {
+        if (r.up != null && r.down != null) {
             const LP = calcularLinepack(r.up, r.down, r.config);
 
             enriched[key] = {
