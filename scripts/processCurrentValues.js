@@ -47,7 +47,7 @@ export function procesarCurrentValues(dataset) {
     const enriched = {};
 
     for (const key in resultado) {  
-        console.log("Resultado parcial:", resultado);
+        // console.log("Resultado parcial:", resultado);
         const r = resultado[key];
 
         if (r.up != null && r.down != null) {
