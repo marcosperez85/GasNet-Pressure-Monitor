@@ -108,23 +108,6 @@ function setupVisualComponents() {
     loadMap($GOOGLE_MAPS_API_KEY);
 }
 
-function forzarRefreshDatos() {
-    if (!startDateGlobal || !endDateGlobal) return;
-
-    const ahora = new Date();
-    const hace1min = new Date(ahora.getTime() - 1 * 60 * 1000);
-
-    // Primero cambiamos a un tiempo anterior para asegurar que el cambio sea detectado
-    EMBED.submitTarget(endDateGlobal, hace1min.toISOString().split('.')[0]);
-
-    // Pequeño delay para asegurar que el primer cambio sea registrado
-    setTimeout(() => {
-        // Luego volvemos al tiempo actual
-        EMBED.submitTarget(endDateGlobal, ahora.toISOString().split('.')[0]);
-        console.log("Refresh de datos completado");
-    }, 500);
-}
-
 /**
  * Función principal de inicialización
  */
@@ -133,17 +116,7 @@ function initialize() {
     stringURLs = setupURLs();
     setupDataSubscriptions();
     setupVisualComponents();
-
-    // Programar un único refresh de datos con suficiente delay
-    // para que todo esté inicializado correctamente
-    // Esta función podría eliminarse en el New Layout de Configuration Hub seleccionando un query del tipo
-    // Current Value en lugar de Historical (current value) y habilitar "Submit Query On Load"
-    console.log("Programando carga inicial de datos...");
-    setTimeout(forzarRefreshDatos, 3000);
 }
 
 // Punto de entrada principal cuando el DOM está cargado
 $(document).ready(initialize);
-
-// Exposición global para poder forzar refrescos manualmente si es necesario
-window.forzarRefreshDatos = forzarRefreshDatos;
