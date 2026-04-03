@@ -4,7 +4,8 @@ import { AppState } from './state';
 import {
     pEntradaUpGlobal,
     pEntradaDownGlobal,
-    caudalGlobal
+    caudalGlobal,
+    endDateGlobal
 } from '../src/main.js';
 
 
@@ -69,6 +70,7 @@ export function setupDistributionZones() {
         $(this).addClass('active');
 
         updateMeasurementPoints($(this).text().trim());
+        forzarRefreshDatos()
     });
 }
 
@@ -124,4 +126,20 @@ export function actualizarSidebarConDatos(dataProcesada) {
 function ordenarPorCriticidad(dataProcesada) {
     return Object.entries(dataProcesada)
         .sort((a, b) => a[1].pressure - b[1].pressure); // menor presión = más crítico
+}
+
+
+// Actualizar el endTime cada vez que se presiona en una Unidad de Negocio para forzar un queryChange en el
+// query de CurrentValueDataSet.
+// Esta función podría eliminarse en el New Layout de Configuration Hub seleccionando un query del tipo
+// Current Value en lugar de Historical (current value) y habilitar "Submit Query On Load"
+function forzarRefreshDatos() {
+    if (!endDateGlobal) return;
+
+    const ahora = new Date();
+    const hace1min = new Date(ahora.getTime() - 1 * 60 * 1000);
+
+    // Primero cambiamos a un tiempo anterior para asegurar que el cambio sea detectado
+    EMBED.submitTarget(endDateGlobal, hace1min.toISOString().split('.')[0]);
+    EMBED.submitTarget(endDateGlobal, ahora.toISOString().split('.')[0]);
 }
