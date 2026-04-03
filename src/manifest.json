@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "2.1.0",
+		"version": "3.0.0",
 		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -33,6 +33,10 @@
 			},
 			"inputCaudalHist": {
 				"title": "Caudal Historico",
+				"$ref": "#/definitions/dataSource"
+			},
+			"currentValueDataset": {
+				"title": "Valor actual de variables",
 				"$ref": "#/definitions/dataSource"
 			},
 			"pEntradaUpGlobal": {
@@ -72,6 +76,9 @@
 				"ui:field": "dataSource"
 			},
 			"inputCaudalHist": {
+				"ui:field": "dataSource"
+			},
+			"currentValueDataset": {
 				"ui:field": "dataSource"
 			},
 			"pEntradaUpGlobal": {

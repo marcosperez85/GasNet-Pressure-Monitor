@@ -7,7 +7,7 @@ const pEntrada = 'P-Entrada';
 const caudal = 'Q-Inst';
 
 // Función para crear las URLs
-function crearURLs() {
+export function crearURLs() {
     let stringURLs = [];
     
     // Recorremos todas las unidades de negocio
@@ -49,13 +49,3 @@ function crearURLs() {
     // Unimos todas las URLs en un solo string
     return stringURLs.join(',');
 }
-
-// Ejecutamos la función y guardamos el resultado
-const stringURLs = crearURLs();
-
-// Imprimimos el resultado para verificar
-console.log("String de URLs completo:");
-console.log(stringURLs);
-
-// Exportamos la variable para que pueda ser utilizada en otros archivos
-export { stringURLs };
