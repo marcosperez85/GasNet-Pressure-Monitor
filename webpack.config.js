@@ -77,6 +77,14 @@ module.exports = {
 
   externals: {
     jquery: 'jQuery',
-    echarts: 'echarts'
-  }
+    echarts: 'echarts',
+    '@fortawesome/fontawesome-free': 'FontAwesome'
+  },
+
+  // Opcional: ajustar el límite de tamaño para evitar warnings
+  performance: {
+    hints: 'warning',
+    maxAssetSize: 1500000, // 1.5 MB
+    maxEntrypointSize: 1500000,
+  },
 };
