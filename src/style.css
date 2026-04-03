@@ -381,8 +381,11 @@ body {
 
 /* Data Panel Styles */
 .segmentList {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     overflow-y: auto;
+    
 }
 
 .segmentItem {
