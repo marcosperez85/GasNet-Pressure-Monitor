@@ -49,15 +49,15 @@ function setupUI() {
 function setupURLs() {
     const urlsGeneradas = crearURLs();
     const urlsLimpias = limpiarURLs(urlsGeneradas);
-    
-    console.log("URLs generadas y limpiadas:", urlsLimpias);
-    
+
+    // console.log("URLs generadas y limpiadas:", urlsLimpias);
+
     if (stringURLsGlobal) {
         EMBED.submitTarget(stringURLsGlobal, urlsLimpias);
     } else {
         console.log("No se pudo enviar el query de current values");
     }
-    
+
     return urlsLimpias;
 }
 
@@ -65,11 +65,12 @@ function setupURLs() {
  * Configura la suscripción a los cambios en los valores actuales
  */
 function setupDataSubscriptions() {
+
     if (!currentValueDataset || !EMBED.fieldTypeIsQuery(currentValueDataset)) {
         console.log("No hay dataset configurado o no es un query");
         return;
     }
-    
+
     EMBED.subscribeFieldToQueryChange(currentValueDataset, handleDataUpdate);
 }
 
@@ -85,16 +86,13 @@ function handleDataUpdate(data) {
         return;
     }
 
-    // Logging para debug
-    console.log("La variable DATA en crudo es:", data);
     if (data[0]) {
-        console.log("Estructura completa de DATA[0]:", JSON.stringify(data[0], null, 2));
-        console.log("Propiedades disponibles en DATA[0]:", Object.keys(data[0]));
+        // console.log("Estructura completa de DATA[0]:", JSON.stringify(data[0], null, 2));
+        // console.log("Propiedades disponibles en DATA[0]:", Object.keys(data[0]));
     }
 
     try {
         const processed = procesarCurrentValues(data);
-        console.log("Los datos procesados son:", processed);
         actualizarSidebarConDatos(processed);
     } catch (error) {
         console.error("Error al procesar los datos:", error);
@@ -110,6 +108,23 @@ function setupVisualComponents() {
     loadMap($GOOGLE_MAPS_API_KEY);
 }
 
+function forzarRefreshDatos() {
+    if (!startDateGlobal || !endDateGlobal) return;
+
+    const ahora = new Date();
+    const hace1min = new Date(ahora.getTime() - 1 * 60 * 1000);
+
+    // Primero cambiamos a un tiempo anterior para asegurar que el cambio sea detectado
+    EMBED.submitTarget(endDateGlobal, hace1min.toISOString().split('.')[0]);
+
+    // Pequeño delay para asegurar que el primer cambio sea registrado
+    setTimeout(() => {
+        // Luego volvemos al tiempo actual
+        EMBED.submitTarget(endDateGlobal, ahora.toISOString().split('.')[0]);
+        console.log("Refresh de datos completado");
+    }, 500);
+}
+
 /**
  * Función principal de inicialización
  */
@@ -118,7 +133,17 @@ function initialize() {
     stringURLs = setupURLs();
     setupDataSubscriptions();
     setupVisualComponents();
+
+    // Programar un único refresh de datos con suficiente delay
+    // para que todo esté inicializado correctamente
+    // Esta función podría eliminarse en el New Layout de Configuration Hub seleccionando un query del tipo
+    // Current Value en lugar de Historical (current value) y habilitar "Submit Query On Load"
+    console.log("Programando carga inicial de datos...");
+    setTimeout(forzarRefreshDatos, 3000);
 }
 
 // Punto de entrada principal cuando el DOM está cargado
 $(document).ready(initialize);
+
+// Exposición global para poder forzar refrescos manualmente si es necesario
+window.forzarRefreshDatos = forzarRefreshDatos;
