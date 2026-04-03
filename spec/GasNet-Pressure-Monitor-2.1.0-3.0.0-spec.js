@@ -2,7 +2,8 @@
 var REQUIRED_DATA_SOURCES = [
   "inputPEntradaUpHist",
   "inputPEntradaDownHist",
-  "inputCaudalHist"
+  "inputCaudalHist",
+  "currentValueDataset"
 ];
 
 // 🔧 Función para normalizar dataSources en cualquier sección
