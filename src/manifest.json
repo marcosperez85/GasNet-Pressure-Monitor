@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "3.0.0",
+		"version": "3.1.0",
 		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -39,6 +39,14 @@
 				"title": "Valor actual de variables",
 				"$ref": "#/definitions/dataSource"
 			},
+			"GOOGLE_MAPS_API_KEY": {
+				"title": "Google Maps API KEY",
+				"$ref": "#/definitions/dataSource"
+			},
+			"KML_URL": {
+				"title": "URL del archivo KML",
+				"$ref": "#/definitions/dataSource"
+			},
 			"pEntradaUpGlobal": {
 				"title": "Global de P-Entrada Upstream",
 				"$ref": "#/definitions/dataTarget"
@@ -62,45 +70,80 @@
 			"endDateGlobal": {
 				"title": "Fecha de fin",
 				"$ref": "#/definitions/dataTarget"
-			},
-			"GOOGLE_MAPS_API_KEY": {
-				"title": "Google Maps API KEY",
-				"$ref": "#/definitions/dataSource"
 			}
 		},
 		"UISchema": {
 			"inputPEntradaUpHist": {
-				"ui:field": "dataSource"
+				"ui:field": "dataSource",
+				"ui:contents": [
+					"query"
+				]
 			},
 			"inputPEntradaDownHist": {
-				"ui:field": "dataSource"
+				"ui:field": "dataSource",
+				"ui:contents": [
+					"query"
+				]
 			},
 			"inputCaudalHist": {
-				"ui:field": "dataSource"
+				"ui:field": "dataSource",
+				"ui:contents": [
+					"query"
+				]
 			},
 			"currentValueDataset": {
-				"ui:field": "dataSource"
-			},
-			"pEntradaUpGlobal": {
-				"ui:field": "dataTarget"
-			},
-			"pEntradaDownGlobal": {
-				"ui:field": "dataTarget"
-			},
-			"caudalGlobal": {
-				"ui:field": "dataTarget"
-			},
-			"stringURLsGlobal": {
-				"ui:field": "dataTarget"
-			},
-			"startDateGlobal": {
-				"ui:field": "dataTarget"
-			},
-			"endDateGlobal": {
-				"ui:field": "dataTarget"
+				"ui:field": "dataSource",
+				"ui:contents": [
+					"query"
+				]
 			},
 			"GOOGLE_MAPS_API_KEY": {
-				"ui:field": "dataSource"
+				"ui:field": "dataSource",
+				"ui:contents": [
+					"manual"
+				]
+			},
+			"KML_URL": {
+				"ui:field": "dataSource",
+				"ui:contents": [
+					"manual"
+				]
+			},
+			"pEntradaUpGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
+			},
+			"pEntradaDownGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
+			},
+			"caudalGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
+			},
+			"stringURLsGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
+			},
+			"startDateGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
+			},
+			"endDateGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
 			}
 		}
 	},
