@@ -1,5 +1,4 @@
 import { DOM } from './dom';
-import { updateMeasurementPoints } from './sidebar';
 
 let mapInstance = null;
 let dataPendiente = null;
@@ -116,57 +115,6 @@ function initMap() {
         console.error("Error al inicializar el mapa:", error);
         return;
     }
-
-    const locations = [
-        { lat: -38.006, lng: -57.551, title: "Mar del Plata", icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png' },
-        { lat: -38.715, lng: -62.265, title: "Bahía Blanca", icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' },
-        { lat: -34.921, lng: -57.954, title: "La Plata", icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' }
-    ];
-
-    // Create an info window to share between markers
-    const infoWindow = new google.maps.InfoWindow();
-
-    // Añadir marcadores al mapa
-    locations.forEach(loc => {
-        const marker = new google.maps.Marker({
-            position: { lat: loc.lat, lng: loc.lng },
-            map: mapInstance,
-            title: loc.title,
-            icon: loc.icon || 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-        });
-
-        marker.addListener('click', () => {
-            // Set content and open info window
-            infoWindow.setContent(`<div style="color: #333; padding: 5px;"><b>${loc.title}</b><br>Distribuidora: Camuzzi Gas Pampeana</div>`);
-            infoWindow.open(map, marker);
-
-            // Update measurement points
-            updateMeasurementPoints(loc.title);
-
-            // Highlight the corresponding zone segment in the sidebar
-            $('.zoneSegment').each(function () {
-                if ($(this).text().trim() === loc.title) {
-                    $('.zoneSegment').removeClass('active');
-                    $(this).addClass('active');
-
-                    // Ensure parent is expanded
-                    const $parent = $(this).closest('.zoneSegments');
-                    if ($parent.length && !$parent.hasClass('active')) {
-                        $parent.addClass('active');
-
-                        // Update the chevron icon
-                        const $button = $parent.prev();
-                        if ($button.length) {
-                            const $icon = $button.find('i');
-                            if ($icon.length) {
-                                $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    });
 
     // Cargar el KML pendiente de forma diferida después de que el mapa esté completamente listo
     google.maps.event.addListenerOnce(mapInstance, 'tilesloaded', () => {
