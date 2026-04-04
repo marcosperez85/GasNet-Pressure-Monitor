@@ -53,11 +53,16 @@ export const MEASUREMENT_POINTS = {
                 L: 157900,
                 Z: 1,
                 T: 288,
-                R: 8.314
+                R: 8.314,
+                thresholds: {
+                    green: 60,
+                    yellow: 45
+                }
             },
 
             linepack: '7.2 Sm3',
-            pressure: '46.3 bar'
+            pressure: '46.3 bar',
+
         },
         {
             title: 'Sistema de la Costa',
@@ -81,7 +86,11 @@ export const MEASUREMENT_POINTS = {
                 L: 129420,
                 Z: 1,
                 T: 288,
-                R: 8.314
+                R: 8.314,
+                thresholds: {
+                    green: 60,
+                    yellow: 45
+                }
             },
 
             linepack: '7.2 Sm3',
@@ -109,7 +118,11 @@ export const MEASUREMENT_POINTS = {
                 L: 129420,
                 Z: 1,
                 T: 288,
-                R: 8.314
+                R: 8.314,
+                thresholds: {
+                    green: 60,
+                    yellow: 45
+                }
             },
 
             linepack: '7.2 Sm3',
@@ -138,7 +151,11 @@ export const MEASUREMENT_POINTS = {
                 L: 129420,
                 Z: 1,
                 T: 288,
-                R: 8.314
+                R: 8.314,
+                thresholds: {
+                    green: 60,
+                    yellow: 45
+                }
             },
 
             linepack: '7.2 Sm3',
