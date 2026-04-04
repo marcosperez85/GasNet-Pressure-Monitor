@@ -95,9 +95,25 @@ function seleccionarPunto(point) {
 }
 
 export function actualizarSidebarConDatos(dataProcesada) {
+
+    ordenarPorCriticidad(dataProcesada)
+
     $('.segmentItem').each(function () {
         const title = $(this).find('.segmentTitle').text().trim();
         const d = dataProcesada[title];
+
+        // 🔥 buscar el point real desde data.js
+        let pointConfig = null;
+
+        for (const unidad in MEASUREMENT_POINTS) {
+            const found = MEASUREMENT_POINTS[unidad].find(p => p.title === title);
+            if (found) {
+                pointConfig = found;
+                break;
+            }
+        }
+
+        const thresholds = pointConfig?.config?.thresholds || { green: 60, yellow: 45 };
 
         if (!d) {
             $(this).find('.linepack-value').text('N/A');
@@ -106,13 +122,12 @@ export function actualizarSidebarConDatos(dataProcesada) {
         }
 
         const pressure = d.pressure;
-
         // 🔥 SCADA COLORS
         let color = 'gray';
 
-        if (pressure > 60) color = '#4caf50';       // verde
-        else if (pressure > 45) color = '#ff9800';  // amarillo
-        else color = '#f44336';                     // rojo
+        if (pressure > thresholds.green) color = '#4caf50';
+        else if (pressure > thresholds.yellow) color = '#ff9800';
+        else color = '#f44336';                  // rojo
 
         $(this).css('border-left', `5px solid ${color}`);
 
@@ -124,8 +139,17 @@ export function actualizarSidebarConDatos(dataProcesada) {
 }
 
 function ordenarPorCriticidad(dataProcesada) {
-    return Object.entries(dataProcesada)
-        .sort((a, b) => a[1].pressure - b[1].pressure); // menor presión = más crítico
+    
+    const ordenados = Object.entries(dataProcesada)
+        .sort((a, b) => a[1].pressure - b[1].pressure);
+
+    ordenados.forEach(([title], index) => {
+        const el = $('.segmentItem').filter(function () {
+            return $(this).find('.segmentTitle').text().trim() === title;
+        });
+
+        el.css('order', index); // requiere flexbox
+    });
 }
 
 
