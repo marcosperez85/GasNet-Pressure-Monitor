@@ -4,7 +4,7 @@ import {
 } from '../scripts/sidebar.js';
 import { setupNavigation } from '../scripts/navigation.js';
 import { initChart } from '../scripts/chart.js';
-import { loadMap } from '../scripts/map.js';
+import { loadMap, cargarKML } from '../scripts/map.js';
 import { crearURLs } from '../scripts/crearStringURL.js';
 import { limpiarURLs } from '../scripts/limpiarURLs.js';
 import { procesarCurrentValues } from '../scripts/processCurrentValues.js';
@@ -14,6 +14,7 @@ let data = EMBED.getComponent().schema.data;
 
 // Exportar variables directamente para otros módulos
 export const $GOOGLE_MAPS_API_KEY = data.GOOGLE_MAPS_API_KEY.manual;
+export const $KML_URL = data.KML_URL.manual;
 export const inputPEntradaUpHist = data.inputPEntradaUpHist;
 export const inputPEntradaDownHist = data.inputPEntradaDownHist;
 export const inputCaudalHist = data.inputCaudalHist;
@@ -94,6 +95,7 @@ function handleDataUpdate(data) {
     try {
         const processed = procesarCurrentValues(data);
         actualizarSidebarConDatos(processed);
+        cargarKML($KML_URL, processed);
     } catch (error) {
         console.error("Error al procesar los datos:", error);
         console.log("Datos que causaron el error:", data);
