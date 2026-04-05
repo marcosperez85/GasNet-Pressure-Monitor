@@ -32,7 +32,7 @@ export const MEASUREMENT_POINTS = {
     ],
     'Mar del Plata': [
         {
-            id: 'ID_00002',
+            id: 'ID_00092',
             title: 'Sistema Tandil - MDP',
             subtitle: '037-001',
 
@@ -66,6 +66,7 @@ export const MEASUREMENT_POINTS = {
 
         },
         {
+            id: '036-026',
             title: 'Sistema de la Costa',
             subtitle: '036-026',
 
@@ -98,6 +99,7 @@ export const MEASUREMENT_POINTS = {
             pressure: '46.3 bar'
         },
         {
+            id: '037-082',
             title: 'Sistema Balcarce',
             subtitle: 'Conexión regional',
 
@@ -130,6 +132,7 @@ export const MEASUREMENT_POINTS = {
             pressure: '46.3 bar'
         },
         {
+            id: '036-032',
             title: 'Sistema MDP Ciudad',
             subtitle: 'Conexión regional',
 
