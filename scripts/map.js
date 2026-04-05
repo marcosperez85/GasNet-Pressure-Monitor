@@ -1,4 +1,5 @@
 import { DOM } from './dom';
+// Asegurémonos de que esta función exista o modifiquemos la importación
 import { seleccionarPuntoPorId } from './sidebar';
 
 let mapInstance = null;
@@ -6,7 +7,7 @@ let dataPendiente = null;
 let polylinesMap = {};
 let polylines = [];
 let mapScriptLoaded = false;
-let kmlYaCargado = false;
+let geoJsonCargado = false;
 
 function limpiarLineas() {
     polylines.forEach(line => line.setMap(null));
@@ -17,7 +18,7 @@ function limpiarLineas() {
 function initMap() {
     console.log("Inicializando mapa...");
 
-    // Dark mode styling for Google Maps
+    // Restauramos el estilo completo para mejor visibilidad
     const darkMapStyle = [
         { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
         { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
@@ -99,7 +100,6 @@ function initMap() {
         },
     ];
 
-    // Inicializar el mapa
     try {
         mapInstance = new google.maps.Map(DOM.map, {
             center: { lat: -37.35, lng: -59.09 },
@@ -112,32 +112,23 @@ function initMap() {
         });
 
         console.log("Mapa inicializado correctamente");
-    } catch (error) {
-        console.error("Error al inicializar el mapa:", error);
+    } catch (e) {
+        console.error("Error al inicializar el mapa:", e);
         return;
     }
 
-    // Cargar el KML pendiente de forma diferida después de que el mapa esté completamente listo
     google.maps.event.addListenerOnce(mapInstance, 'tilesloaded', () => {
-        console.log("Mapa completamente cargado");
-
+        console.log("Mapa completamente cargado (tiles loaded)");
         if (dataPendiente) {
-            // Usar un setTimeout para dar tiempo al renderizado del mapa
+            console.log("Detectado GeoJSON pendiente, cargando en 300ms...");
             setTimeout(() => {
-                console.log("Cargando KML diferido...");
-                cargarKML(dataPendiente.url, dataPendiente.dataProcesada);
+                cargarGeoJSON(dataPendiente.url, dataPendiente.dataProcesada);
                 dataPendiente = null;
-            }, 500);
+            }, 300);
         }
     });
 }
 
-/**
- * Carga la API de Google Maps con manejo adecuado de async
- * @param {string} apiKey - La clave API para Google Maps
- */
-
-// Solución: cargar el API de Google Maps de forma realmente asíncrona
 export function loadMap(apiKey) {
     if (!apiKey) {
         console.error('Cannot load Google Maps: API key is not available');
@@ -152,13 +143,11 @@ export function loadMap(apiKey) {
     console.log("Cargando Google Maps API...");
     mapScriptLoaded = true;
 
-    // Configurar la función de callback
     window.initMap = function () {
         console.log("Google Maps API cargada correctamente");
         initMap();
     };
 
-    // Crear el elemento script
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap&loading=async`;
     script.async = true;
@@ -169,161 +158,204 @@ export function loadMap(apiKey) {
         mapScriptLoaded = false;
     };
 
-    // Añadirlo al head del documento
     document.head.appendChild(script);
 }
 
-
-export function getMapInstance() {
-    return mapInstance;
-}
-
-/**
- * Procesa un KML y lo muestra en el mapa
- * @param {string} url - URL del archivo KML
- * @param {object} dataProcesada - Datos procesados con información de presiones
- */
-export async function cargarKML(url, dataProcesada) {
+export function cargarGeoJSON(url, dataProcesada) {
     if (!mapInstance) {
-        console.warn("Map aún no inicializado → guardo datos");
+        console.warn("Mapa aún no inicializado → guardo datos");
         dataPendiente = { url, dataProcesada };
         return;
     }
 
-    if (kmlYaCargado) {
-        console.log("KML ya cargado → solo actualizo colores");
+    if (geoJsonCargado) {
+        console.log("GeoJSON ya cargado → solo actualizo colores");
         actualizarColores(dataProcesada);
         return;
     }
 
-    try {
-        // Limpiar líneas existentes
-        limpiarLineas();
+    // Limpiar líneas existentes
+    limpiarLineas();
+    
+    console.log("Iniciando carga de GeoJSON desde:", url);
+    
+    // Mostrar indicador de progreso
+    const progressIndicator = document.createElement('div');
+    progressIndicator.style.position = 'absolute';
+    progressIndicator.style.top = '10px';
+    progressIndicator.style.left = '50%';
+    progressIndicator.style.transform = 'translateX(-50%)';
+    progressIndicator.style.background = 'rgba(0,0,0,0.7)';
+    progressIndicator.style.color = 'white';
+    progressIndicator.style.padding = '5px 10px';
+    progressIndicator.style.borderRadius = '4px';
+    progressIndicator.style.zIndex = '1000';
+    progressIndicator.style.fontSize = '12px';
+    progressIndicator.innerText = 'Cargando GeoJSON...';
+    DOM.map.appendChild(progressIndicator);
 
-        // Mostrar progreso
-        console.log("Iniciando carga de KML desde:", url);
+    fetch(url)
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Error HTTP: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(geojson => {
+            console.log("GeoJSON descargado:", geojson);
+            
+            if (!geojson.features || !geojson.features.length) {
+                console.warn("GeoJSON no contiene features");
+                progressIndicator.remove();
+                return;
+            }
+            
+            console.log(`Procesando ${geojson.features.length} features`);
 
-        // Fetch KML
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
+            // Procesar en lotes para evitar bloquear el navegador
+            const batchSize = 10;
+            const totalFeatures = geojson.features.length;
+            let processedFeatures = 0;
 
-        const text = await response.text();
-        console.log(`KML descargado: ${(text.length / 1024).toFixed(2)} KB`);
+            function processBatch(startIndex) {
+                const endIndex = Math.min(startIndex + batchSize, totalFeatures);
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const feature = geojson.features[i];
+                    
+                    if (!feature.geometry) {
+                        console.warn("Feature sin geometría:", feature);
+                        continue;
+                    }
 
-        // Parse XML
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, "text/xml");
+                    const id = feature.properties?.id || feature.properties?.ID || `feature_${i}`;
+                    const name = feature.properties?.name || feature.properties?.NAME || `Feature ${i}`;
 
-        // Procesar placemarks
-        const placemarks = xml.getElementsByTagName("Placemark");
-        console.log(`Placemarks encontrados: ${placemarks.length}`);
+                    console.log(`Procesando feature: ${name} (ID: ${id}), tipo: ${feature.geometry.type}`);
 
-        // Variables para el procesamiento por lotes
-        const batchSize = 10;
-        const totalBatches = Math.ceil(placemarks.length / batchSize);
-        let batchesProcessed = 0;
+                    let path = [];
 
-        // Mostrar indicador de progreso
-        const progressIndicator = document.createElement('div');
-        progressIndicator.style.position = 'absolute';
-        progressIndicator.style.top = '10px';
-        progressIndicator.style.left = '50%';
-        progressIndicator.style.transform = 'translateX(-50%)';
-        progressIndicator.style.background = 'rgba(0,0,0,0.7)';
-        progressIndicator.style.color = 'white';
-        progressIndicator.style.padding = '5px 10px';
-        progressIndicator.style.borderRadius = '4px';
-        progressIndicator.style.zIndex = '1000';
-        progressIndicator.style.fontSize = '12px';
-        progressIndicator.innerText = 'Cargando KML: 0%';
-        DOM.map.appendChild(progressIndicator);
+                    if (feature.geometry.type === "LineString") {
+                        path = feature.geometry.coordinates.map(c => ({
+                            lng: c[0],
+                            lat: c[1]
+                        }));
+                        
+                        if (path.length > 0) {
+                            crearLinea(path, id, dataProcesada, name);
+                        }
+                    }
 
-        // Función para procesar un lote
-        const processBatch = (startIndex) => {
-            const endIndex = Math.min(startIndex + batchSize, placemarks.length);
+                    if (feature.geometry.type === "MultiLineString") {
+                        feature.geometry.coordinates.forEach((segment, segIndex) => {
+                            const segmentId = `${id}_segment_${segIndex}`;
+                            const subPath = segment.map(c => ({
+                                lng: c[0],
+                                lat: c[1]
+                            }));
+                            
+                            if (subPath.length > 0) {
+                                crearLinea(subPath, segmentId, dataProcesada, `${name} - Segment ${segIndex}`);
+                            }
+                        });
+                    }
+                }
 
-            for (let i = startIndex; i < endIndex; i++) {
-                // Procesar cada placemark
-                const placemark = placemarks[i];
-                const id = placemark.getAttribute("id");
-                const coordsNode = placemark.getElementsByTagName("coordinates")[0];
+                processedFeatures += (endIndex - startIndex);
+                const progress = Math.floor((processedFeatures / totalFeatures) * 100);
+                progressIndicator.innerText = `Cargando GeoJSON: ${progress}%`;
 
-                if (!coordsNode) continue;
-
-                // Convertir coordenadas a path
-                const coordsText = coordsNode.textContent.trim();
-                const path = coordsText
-                    .split(/\s+/)
-                    .map(coord => {
-                        const [lng, lat] = coord.split(",");
-                        return { lat: parseFloat(lat), lng: parseFloat(lng) };
-                    });
-
-                // Determinar color según presión
-                const color = obtenerColorPorPresion(id, dataProcesada);
-
-                // Crear polyline
-                const polyline = new google.maps.Polyline({
-                    path,
-                    geodesic: true,
-                    strokeColor: color,
-                    strokeOpacity: 1.0,
-                    strokeWeight: 3,
-                    map: mapInstance
-                });
-
-                polylines.push(polyline);
-                polylinesMap[id] = polyline;
-
-                polyline.addListener('click', () => {
-                    console.log("Click en tramo:", id);
-                    seleccionarPuntoPorId(id);
-                });
+                if (endIndex < totalFeatures) {
+                    // Programar el siguiente lote
+                    setTimeout(() => processBatch(endIndex), 0);
+                } else {
+                    // Terminado
+                    setTimeout(() => {
+                        progressIndicator.remove();
+                        console.log(`GeoJSON procesado: ${polylines.length} líneas creadas`);
+                        geoJsonCargado = true;
+                    }, 500);
+                }
             }
 
-            // Actualizar progreso
-            batchesProcessed++;
-            const progress = Math.floor((batchesProcessed / totalBatches) * 100);
-            progressIndicator.innerText = `Cargando KML: ${progress}%`;
-
-            // Si hay más por procesar, programar el siguiente lote
-            if (endIndex < placemarks.length) {
-                requestIdleCallback(() => processBatch(endIndex));
-            } else {
-                // Completado - eliminar indicador de progreso
-                setTimeout(() => {
-                    progressIndicator.remove();
-                    console.log(`KML procesado completamente: ${polylines.length} líneas`);
-                }, 1000);
-            }
-        };
-
-        // Iniciar el procesamiento
-        processBatch(0);
-
-    } catch (error) {
-        console.error("Error al cargar o procesar el KML:", error);
-    }
-    kmlYaCargado = true;
+            // Iniciar procesamiento por lotes
+            processBatch(0);
+        })
+        .catch(err => {
+            console.error("Error al cargar o procesar GeoJSON:", err);
+            progressIndicator.innerText = `Error: ${err.message}`;
+            setTimeout(() => progressIndicator.remove(), 3000);
+        });
 }
 
-/**
- * Determina el color basado en la presión
- * @param {object} dataProcesada - Datos con información de presiones
- * @returns {string} - Color en formato hex
- */
+function crearLinea(path, id, dataProcesada, name) {
+    if (!path || path.length < 2) {
+        console.warn(`Path inválido para línea ID: ${id}`, path);
+        return;
+    }
+
+    const color = obtenerColorPorPresion(id, dataProcesada);
+
+    try {
+        const polyline = new google.maps.Polyline({
+            path,
+            strokeColor: color,
+            strokeWeight: 3,
+            strokeOpacity: 1,
+            map: mapInstance
+        });
+
+        polylines.push(polyline);
+        polylinesMap[id] = polyline;
+
+        // Añadir tooltip con el nombre
+        const tooltip = new google.maps.InfoWindow({
+            content: `<div style="color: #333; padding: 5px;">${name || id}</div>`
+        });
+
+        polyline.addListener('click', () => {
+            console.log("Click en tramo:", id);
+            
+            // Mostrar tooltip
+            tooltip.setPosition(path[Math.floor(path.length / 2)]);
+            tooltip.open(mapInstance);
+            
+            // Resaltar la línea
+            resaltarTramo(id);
+            
+            // Si existe la función, llamarla
+            if (typeof window.seleccionarPuntoPorId === 'function') {
+                window.seleccionarPuntoPorId(id);
+            }
+        });
+    } catch (error) {
+        console.error(`Error al crear polyline para ID: ${id}`, error);
+    }
+}
+
 function obtenerColorPorPresion(id, dataProcesada) {
     const punto = dataProcesada[id];
-
-    if (!punto) return "#999";
+    if (!punto) {
+        console.log(`No hay datos de presión para ID: ${id}`);
+        return "#999"; // gris
+    }
 
     const p = punto.pressure;
+    if (!p && p !== 0) {
+        console.log(`Presión inválida para ID: ${id}: ${p}`);
+        return "#999"; // gris
+    }
 
     if (p > 60) return "#4caf50";
     if (p > 45) return "#ff9800";
     return "#f44336";
+}
+
+function actualizarColores(dataProcesada) {
+    Object.entries(polylinesMap).forEach(([id, line]) => {
+        const color = obtenerColorPorPresion(id, dataProcesada);
+        line.setOptions({ strokeColor: color });
+    });
 }
 
 export function resaltarTramo(id) {
@@ -332,24 +364,15 @@ export function resaltarTramo(id) {
     });
 
     const line = polylinesMap[id];
-
     if (line) {
         line.setOptions({
             strokeWeight: 6,
             strokeOpacity: 1
         });
+    } else {
+        console.warn(`No se encontró el tramo con ID: ${id}`);
     }
 }
 
-function actualizarColores(dataProcesada) {
-    Object.entries(polylinesMap).forEach(([id, line]) => {
-
-        const color = obtenerColorPorPresion(id, dataProcesada);
-
-        line.setOptions({
-            strokeColor: color
-        });
-    });
-}
-
+// Exponer funciones necesarias globalmente
 window.resaltarTramo = resaltarTramo;
