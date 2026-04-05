@@ -1,4 +1,5 @@
 import { DOM } from './dom';
+import { seleccionarPuntoPorId } from './sidebar';
 
 let mapInstance = null;
 let dataPendiente = null;
@@ -275,6 +276,11 @@ export async function cargarKML(url, dataProcesada) {
 
                 polylines.push(polyline);
                 polylinesMap[id] = polyline;
+
+                polyline.addListener('click', () => {
+                    console.log("Click en tramo:", id);
+                    seleccionarPuntoPorId(id);
+                });
             }
 
             // Actualizar progreso
