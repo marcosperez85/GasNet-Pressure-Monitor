@@ -70,6 +70,10 @@
 			"endDateGlobal": {
 				"title": "Fecha de fin",
 				"$ref": "#/definitions/dataTarget"
+			},
+			"datosProcesadosGlobal": {
+				"title": "Array Global de datos procesados",
+				"$ref": "#/definitions/dataTarget"
 			}
 		},
 		"UISchema": {
@@ -140,6 +144,12 @@
 				]
 			},
 			"endDateGlobal": {
+				"ui:field": "dataTarget",
+				"ui:contents": [
+					"global"
+				]
+			},
+			"datosProcesadosGlobal": {
 				"ui:field": "dataTarget",
 				"ui:contents": [
 					"global"
