@@ -1,5 +1,6 @@
 import { DOM } from './dom';
 import { MEASUREMENT_POINTS } from './data';
+import { resaltarTramo } from './map';
 import { AppState } from './state';
 import {
     pEntradaUpGlobal,
@@ -92,6 +93,7 @@ function seleccionarPunto(point) {
     if (typeof window.refrescarGrafico === 'function') {
         window.refrescarGrafico();
     }
+    resaltarTramo(point.id);
 }
 
 export function actualizarSidebarConDatos(dataProcesada) {
