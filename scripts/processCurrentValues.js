@@ -46,19 +46,36 @@ export function procesarCurrentValues(dataset) {
     // 🔹 Calcular linepack
     const enriched = {};
 
-    for (const key in resultado) {  
-        // console.log("Resultado parcial:", resultado);
+    for (const key in resultado) {
         const r = resultado[key];
 
         if (r.up != null && r.down != null) {
             const LP = calcularLinepack(r.up, r.down, r.config);
 
-            enriched[key] = {
+            // 🔥 Buscar el point en data.js para obtener el ID
+            let pointConfig = null;
+
+            for (const unidad in MEASUREMENT_POINTS) {
+                const found = MEASUREMENT_POINTS[unidad].find(p => p.title === key);
+                if (found) {
+                    pointConfig = found;
+                    break;
+                }
+            }
+
+            const data = {
                 linepack: LP,
                 pressure: (r.up + r.down) / 2
             };
+
+            // 🔥 SIEMPRE guardar por title (sidebar)
+            enriched[key] = data;
+
+            // 🔥 SOLO si hay ID, guardar también por ID (mapa)
+            if (pointConfig?.id) {
+                enriched[pointConfig.id] = data;
+            }
         }
     }
-
     return enriched;
 }
