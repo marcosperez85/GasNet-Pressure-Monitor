@@ -246,7 +246,7 @@ export async function cargarKML(url, dataProcesada) {
             for (let i = startIndex; i < endIndex; i++) {
                 // Procesar cada placemark
                 const placemark = placemarks[i];
-                const name = placemark.getElementsByTagName("name")[0]?.textContent;
+                const id = placemark.getAttribute("id");
                 const coordsNode = placemark.getElementsByTagName("coordinates")[0];
 
                 if (!coordsNode) continue;
@@ -261,7 +261,7 @@ export async function cargarKML(url, dataProcesada) {
                     });
 
                 // Determinar color según presión
-                const color = obtenerColorPorPresion(name, dataProcesada);
+                const color = obtenerColorPorPresion(id, dataProcesada);
 
                 // Crear polyline
                 const polyline = new google.maps.Polyline({
@@ -274,7 +274,7 @@ export async function cargarKML(url, dataProcesada) {
                 });
 
                 polylines.push(polyline);
-                polylinesMap[name] = polyline;
+                polylinesMap[id] = polyline;
             }
 
             // Actualizar progreso
@@ -304,29 +304,14 @@ export async function cargarKML(url, dataProcesada) {
 }
 
 /**
- * Normaliza un string para comparaciones
- * @param {string} str - String a normalizar
- * @returns {string} - String normalizado
- */
-function normalizarNombre(str) {
-    return str?.toLowerCase().trim();
-}
-
-/**
  * Determina el color basado en la presión
- * @param {string} nombreTramo - Nombre del tramo
  * @param {object} dataProcesada - Datos con información de presiones
  * @returns {string} - Color en formato hex
  */
-function obtenerColorPorPresion(nombreTramo, dataProcesada) {
-    // 🔥 tenés que mapear nombre KML → title sidebar
-    const key = Object.keys(dataProcesada).find(k =>
-        normalizarNombre(k) === normalizarNombre(nombreTramo)
-    );
+function obtenerColorPorPresion(id, dataProcesada) {
+    const punto = dataProcesada[id];
 
-    const punto = dataProcesada[key];
-
-    if (!punto) return "#999"; // gris
+    if (!punto) return "#999";
 
     const p = punto.pressure;
 
@@ -335,12 +320,12 @@ function obtenerColorPorPresion(nombreTramo, dataProcesada) {
     return "#f44336";
 }
 
-export function resaltarTramo(nombre) {
+export function resaltarTramo(id) {
     Object.values(polylinesMap).forEach(line => {
         line.setOptions({ strokeWeight: 3, strokeOpacity: 0.3 });
     });
 
-    const line = polylinesMap[nombre];
+    const line = polylinesMap[id];
 
     if (line) {
         line.setOptions({
@@ -351,9 +336,9 @@ export function resaltarTramo(nombre) {
 }
 
 function actualizarColores(dataProcesada) {
-    Object.entries(polylinesMap).forEach(([name, line]) => {
+    Object.entries(polylinesMap).forEach(([id, line]) => {
 
-        const color = obtenerColorPorPresion(name, dataProcesada);
+        const color = obtenerColorPorPresion(id, dataProcesada);
 
         line.setOptions({
             strokeColor: color
