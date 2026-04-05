@@ -25,6 +25,7 @@ export const caudalGlobal = data.caudalGlobal;
 export const stringURLsGlobal = data.stringURLsGlobal;
 export const startDateGlobal = data.startDateGlobal;
 export const endDateGlobal = data.endDateGlobal;
+export const datosProcesadosGlobal = data.datosProcesadosGlobal;
 
 // Botones de rango de tiempo
 export const $boton24h = rootElement.find("#boton24h");
@@ -96,6 +97,7 @@ function handleDataUpdate(data) {
         const processed = procesarCurrentValues(data);
         actualizarSidebarConDatos(processed);
         cargarKML($KML_URL, processed);
+        enviarDatosProcesadosAGlobal(processed)
     } catch (error) {
         console.error("Error al procesar los datos:", error);
         console.log("Datos que causaron el error:", data);
@@ -108,6 +110,11 @@ function handleDataUpdate(data) {
 function setupVisualComponents() {
     initChart();
     loadMap($GOOGLE_MAPS_API_KEY);
+}
+
+function enviarDatosProcesadosAGlobal(processedData) {
+    EMBED.submitTarget(datosProcesadosGlobal, processedData)
+    console.log("Se enviaron a GLOBAL los siguientes datos:", processedData)
 }
 
 /**
