@@ -2,9 +2,12 @@ import { MEASUREMENT_POINTS } from './data.js';
 import { calcularLinepack } from './calcularLinepack.js';
 
 export function procesarCurrentValues(dataset) {
+    // Estructura para almacenar resultados
     const resultado = {};
-
-    // 🔹 Inicializar estructura
+    // Mapa para relacionar ID con título
+    const idTitleMap = {};
+    
+    // Crear el mapa de ID a título y inicializar estructura
     for (const unidad in MEASUREMENT_POINTS) {
         MEASUREMENT_POINTS[unidad].forEach(p => {
             resultado[p.title] = {
@@ -13,10 +16,15 @@ export function procesarCurrentValues(dataset) {
                 q: null,
                 config: p.config
             };
+            
+            // Si el punto tiene ID, guardamos la relación
+            if (p.id) {
+                idTitleMap[p.id] = p.title;
+            }
         });
     }
 
-    // 🔹 Mapear dataset
+    // Mapear dataset
     dataset.forEach(d => {
         if (!d.name) return;
 
@@ -25,7 +33,6 @@ export function procesarCurrentValues(dataset) {
 
         for (const unidad in MEASUREMENT_POINTS) {
             MEASUREMENT_POINTS[unidad].forEach(p => {
-
                 if (!p.nombres) return;
 
                 if (punto === p.nombres.puntoUpstream && variable === 'P-Entrada') {
@@ -43,22 +50,21 @@ export function procesarCurrentValues(dataset) {
         }
     });
 
-    // 🔹 Calcular linepack
+    // Calcular linepack
     const enriched = {};
 
-    for (const key in resultado) {
-        const r = resultado[key];
+    for (const title in resultado) {
+        const r = resultado[title];
 
         if (r.up != null && r.down != null) {
             const LP = calcularLinepack(r.up, r.down, r.config);
-
-            // 🔥 Buscar el point en data.js para obtener el ID
-            let pointConfig = null;
-
+            
+            // Buscar el point en data.js para obtener el ID
+            let pointID = null;
             for (const unidad in MEASUREMENT_POINTS) {
-                const found = MEASUREMENT_POINTS[unidad].find(p => p.title === key);
-                if (found) {
-                    pointConfig = found;
+                const found = MEASUREMENT_POINTS[unidad].find(p => p.title === title);
+                if (found && found.id) {
+                    pointID = found.id;
                     break;
                 }
             }
@@ -68,14 +74,15 @@ export function procesarCurrentValues(dataset) {
                 pressure: (r.up + r.down) / 2
             };
 
-            // 🔥 SIEMPRE guardar por title (sidebar)
-            enriched[key] = data;
-
-            // 🔥 SOLO si hay ID, guardar también por ID (mapa)
-            if (pointConfig?.id) {
-                enriched[pointConfig.id] = data;
+            // Guardar datos por título
+            enriched[title] = data;
+            
+            // Si existe un ID para este título, también guardar una referencia al mismo objeto
+            if (pointID) {
+                enriched[pointID] = data;
             }
         }
     }
+    
     return enriched;
 }
