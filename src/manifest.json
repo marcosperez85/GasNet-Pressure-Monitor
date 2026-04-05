@@ -7,7 +7,7 @@
 		"overview": "Analytic Dashboard"
 	},
 	"info": {
-		"version": "3.1.0",
+		"version": "3.3.0",
 		"updated": "27/03/2026",
 		"size": "12 KB",
 		"developer": "Marcos Perez"
@@ -43,8 +43,8 @@
 				"title": "Google Maps API KEY",
 				"$ref": "#/definitions/dataSource"
 			},
-			"KML_URL": {
-				"title": "URL del archivo KML",
+			"GeoJSON_URL": {
+				"title": "URL del archivo GeoJSON",
 				"$ref": "#/definitions/dataSource"
 			},
 			"pEntradaUpGlobal": {
@@ -107,7 +107,7 @@
 					"manual"
 				]
 			},
-			"KML_URL": {
+			"GeoJSON_URL": {
 				"ui:field": "dataSource",
 				"ui:contents": [
 					"manual"
