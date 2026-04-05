@@ -179,30 +179,24 @@ function buscarPuntoPorId(id) {
 }
 
 export function seleccionarPuntoPorId(id) {
-    const result = buscarPuntoPorId(id);
-
-    if (!result) {
-        console.warn("No se encontró punto para ID:", id);
-        return;
+    // Buscar el punto en MEASUREMENT_POINTS que tenga este id
+    let puntoEncontrado = null;
+    
+    for (const unidad in MEASUREMENT_POINTS) {
+        const found = MEASUREMENT_POINTS[unidad].find(p => p.id === id);
+        if (found) {
+            puntoEncontrado = found;
+            break;
+        }
     }
-
-    const { unidad, point } = result;
-
-    // 🔥 abrir la unidad en sidebar
-    updateMeasurementPoints(unidad);
-
-    // 🔥 marcar visualmente el punto
-    setTimeout(() => {
-        $('.segmentItem').each(function () {
-            const title = $(this).find('.segmentTitle').text().trim();
-
-            if (title === point.title) {
-                $('.segmentItem').removeClass('active');
-                $(this).addClass('active');
-            }
-        });
-    }, 50);
-
-    // 🔥 ejecutar lógica existente
-    seleccionarPunto(point);
+    
+    if (puntoEncontrado) {
+        console.log("Punto encontrado por ID:", puntoEncontrado);
+        seleccionarPunto(puntoEncontrado);
+    } else {
+        console.warn(`No se encontró punto con ID: ${id}`);
+    }
 }
+
+// Exponer función para uso global
+window.seleccionarPuntoPorId = seleccionarPuntoPorId;
