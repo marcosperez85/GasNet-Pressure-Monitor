@@ -179,24 +179,53 @@ function buscarPuntoPorId(id) {
 }
 
 export function seleccionarPuntoPorId(id) {
-    // Buscar el punto en MEASUREMENT_POINTS que tenga este id
+    if (!id) return;
+    
+    console.log(`Intentando seleccionar punto con ID: ${id}`);
+    const idNormalizado = normalizarID(id);
+    
+    // Intentar encontrar el punto por ID exacto o normalizado
     let puntoEncontrado = null;
+    let unidadEncontrada = null;
     
     for (const unidad in MEASUREMENT_POINTS) {
-        const found = MEASUREMENT_POINTS[unidad].find(p => p.id === id);
-        if (found) {
-            puntoEncontrado = found;
-            break;
-        }
+        MEASUREMENT_POINTS[unidad].forEach(p => {
+            if (p.id) {
+                const pIdNormalizado = normalizarID(p.id);
+                
+                // Verificar coincidencia exacta o si uno contiene al otro
+                if (pIdNormalizado === idNormalizado || 
+                    pIdNormalizado.includes(idNormalizado) || 
+                    idNormalizado.includes(pIdNormalizado)) {
+                    
+                    puntoEncontrado = p;
+                    unidadEncontrada = unidad;
+                    console.log(`Coincidencia encontrada: ${p.id} (${p.title}) en unidad '${unidad}'`);
+                }
+            }
+        });
     }
     
     if (puntoEncontrado) {
-        console.log("Punto encontrado por ID:", puntoEncontrado);
+        console.log("Seleccionando punto:", puntoEncontrado);
         seleccionarPunto(puntoEncontrado);
+        
+        // También podemos expandir y resaltar la unidad correspondiente en el sidebar
+        // (esto depende de cómo está implementado tu sidebar)
+        
+        return true;
     } else {
         console.warn(`No se encontró punto con ID: ${id}`);
+        return false;
     }
 }
+
+// Función para normalizar IDs para comparación
+function normalizarID(id) {
+    if (!id) return '';
+    return String(id).trim().toLowerCase();
+}
+
 
 // Exponer función para uso global
 window.seleccionarPuntoPorId = seleccionarPuntoPorId;
