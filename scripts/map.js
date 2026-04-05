@@ -9,10 +9,23 @@ let polylines = [];
 let mapScriptLoaded = false;
 let geoJsonCargado = false;
 
+// Registrar todos los IDs para facilitar la depuración
+const idRegistry = {
+    inGeoJSON: [],
+    inDataProcessed: []
+};
+
+
 function limpiarLineas() {
     polylines.forEach(line => line.setMap(null));
     polylines = [];
     polylinesMap = {};
+}
+
+// Función para normalizar IDs para comparación
+function normalizarID(id) {
+    if (!id) return '';
+    return String(id).trim().toLowerCase();
 }
 
 function initMap() {
@@ -176,9 +189,9 @@ export function cargarGeoJSON(url, dataProcesada) {
 
     // Limpiar líneas existentes
     limpiarLineas();
-    
+
     console.log("Iniciando carga de GeoJSON desde:", url);
-    
+
     // Mostrar indicador de progreso
     const progressIndicator = document.createElement('div');
     progressIndicator.style.position = 'absolute';
@@ -202,36 +215,63 @@ export function cargarGeoJSON(url, dataProcesada) {
             return res.json();
         })
         .then(geojson => {
-            console.log("GeoJSON descargado:", geojson);
-            
+            console.log("GeoJSON descargado, features:", geojson.features?.length || 0);
+
             if (!geojson.features || !geojson.features.length) {
                 console.warn("GeoJSON no contiene features");
                 progressIndicator.remove();
                 return;
             }
-            
-            console.log(`Procesando ${geojson.features.length} features`);
 
-            // Procesar en lotes para evitar bloquear el navegador
+            // Recolectar todos los IDs disponibles en el GeoJSON para depuración
+            geojson.features.forEach(feature => {
+                const featureId = feature.id ||
+                    feature.properties?.id ||
+                    feature.properties?.ID ||
+                    feature.properties?.BUDI;
+
+                if (featureId) {
+                    idRegistry.inGeoJSON.push(featureId);
+                }
+            });
+
+            console.log("IDs encontrados en GeoJSON:", idRegistry.inGeoJSON);
+
+            // Procesar en lotes
             const batchSize = 10;
             const totalFeatures = geojson.features.length;
             let processedFeatures = 0;
 
             function processBatch(startIndex) {
                 const endIndex = Math.min(startIndex + batchSize, totalFeatures);
-                
+
                 for (let i = startIndex; i < endIndex; i++) {
                     const feature = geojson.features[i];
-                    
+
                     if (!feature.geometry) {
-                        console.warn("Feature sin geometría:", feature);
                         continue;
                     }
 
-                    const id = feature.properties?.id || feature.properties?.ID || `feature_${i}`;
-                    const name = feature.properties?.name || feature.properties?.NAME || `Feature ${i}`;
+                    // AQUÍ ESTÁ EL CAMBIO CLAVE: Buscar ID en la raíz del feature primero
+                    const id = feature.id ||
+                        feature.properties?.id ||
+                        feature.properties?.ID ||
+                        feature.properties?.BUDI ||
+                        `feature_${i}`;
 
-                    console.log(`Procesando feature: ${name} (ID: ${id}), tipo: ${feature.geometry.type}`);
+                    // Normalizar el ID para comparaciones
+                    const idNormalizado = normalizarID(id);
+
+                    // Extraer nombre de varias fuentes posibles
+                    const name = feature.properties?.name ||
+                        feature.properties?.NAME ||
+                        id;
+
+                    // Extraer información adicional del HTML si existe
+                    let infoAdicional = {};
+                    if (feature.properties?.description?.value) {
+                        infoAdicional = extraerInfoDeHTML(feature.properties.description.value);
+                    }
 
                     let path = [];
 
@@ -240,9 +280,9 @@ export function cargarGeoJSON(url, dataProcesada) {
                             lng: c[0],
                             lat: c[1]
                         }));
-                        
+
                         if (path.length > 0) {
-                            crearLinea(path, id, dataProcesada, name);
+                            crearLinea(path, id, idNormalizado, dataProcesada, name, infoAdicional);
                         }
                     }
 
@@ -253,9 +293,10 @@ export function cargarGeoJSON(url, dataProcesada) {
                                 lng: c[0],
                                 lat: c[1]
                             }));
-                            
+
                             if (subPath.length > 0) {
-                                crearLinea(subPath, segmentId, dataProcesada, `${name} - Segment ${segIndex}`);
+                                crearLinea(subPath, segmentId, normalizarID(segmentId), dataProcesada,
+                                    `${name} - Segmento ${segIndex}`, infoAdicional);
                             }
                         });
                     }
@@ -288,13 +329,13 @@ export function cargarGeoJSON(url, dataProcesada) {
         });
 }
 
-function crearLinea(path, id, dataProcesada, name) {
+function crearLinea(path, id, idNormalizado, dataProcesada, name, infoAdicional = {}) {
     if (!path || path.length < 2) {
         console.warn(`Path inválido para línea ID: ${id}`, path);
         return;
     }
 
-    const color = obtenerColorPorPresion(id, dataProcesada);
+    const color = obtenerColorPorPresion(id, idNormalizado, dataProcesada);
 
     try {
         const polyline = new google.maps.Polyline({
@@ -305,24 +346,46 @@ function crearLinea(path, id, dataProcesada, name) {
             map: mapInstance
         });
 
+        // Almacenar usando múltiples IDs para maximizar la probabilidad de coincidencia
         polylines.push(polyline);
         polylinesMap[id] = polyline;
 
-        // Añadir tooltip con el nombre
+        // Guardar también con ID normalizado para buscar por ID normalizado
+        if (idNormalizado !== id) {
+            polylinesMap[idNormalizado] = polyline;
+        }
+
+        // Guardar también con BUDI si existe en infoAdicional
+        if (infoAdicional.BUDI) {
+            polylinesMap[infoAdicional.BUDI] = polyline;
+            polylinesMap[normalizarID(infoAdicional.BUDI)] = polyline;
+        }
+
+        // Añadir tooltip con el nombre e información adicional
+        let tooltipContent = `<div style="color: #333; padding: 5px;"><strong>${name}</strong>`;
+
+        // Agregar info adicional relevante si existe
+        if (infoAdicional.BUDI) tooltipContent += `<br>ID: ${infoAdicional.BUDI}`;
+        if (infoAdicional.d_Sistema) tooltipContent += `<br>Sistema: ${infoAdicional.d_Sistema}`;
+        if (infoAdicional.Diametro) tooltipContent += `<br>Diámetro: ${infoAdicional.Diametro}`;
+        if (infoAdicional.Longitud) tooltipContent += `<br>Longitud: ${infoAdicional.Longitud}m`;
+
+        tooltipContent += '</div>';
+
         const tooltip = new google.maps.InfoWindow({
-            content: `<div style="color: #333; padding: 5px;">${name || id}</div>`
+            content: tooltipContent
         });
 
         polyline.addListener('click', () => {
             console.log("Click en tramo:", id);
-            
+
             // Mostrar tooltip
             tooltip.setPosition(path[Math.floor(path.length / 2)]);
             tooltip.open(mapInstance);
-            
+
             // Resaltar la línea
             resaltarTramo(id);
-            
+
             // Si existe la función, llamarla
             if (typeof window.seleccionarPuntoPorId === 'function') {
                 window.seleccionarPuntoPorId(id);
@@ -333,44 +396,162 @@ function crearLinea(path, id, dataProcesada, name) {
     }
 }
 
-function obtenerColorPorPresion(id, dataProcesada) {
-    const punto = dataProcesada[id];
+function obtenerColorPorPresion(id, idNormalizado, dataProcesada) {
+    // Si es un ID autogenerado, usar color predeterminado
+    if (id.toString().startsWith('feature_')) {
+        return "#999"; // gris para features sin ID específico
+    }
+
+    // Intentar encontrar datos por ID o ID normalizado
+    let punto = null;
+
+    // Búsqueda directa
+    if (dataProcesada[id]) {
+        punto = dataProcesada[id];
+    }
+    // Búsqueda por ID normalizado
+    else if (dataProcesada[idNormalizado]) {
+        punto = dataProcesada[idNormalizado];
+    }
+    // Búsqueda por coincidencia parcial
+    else {
+        // Comprobar si hay algún ID en dataProcesada que contenga el ID actual
+        // o si el ID actual contiene algún ID en dataProcesada
+        Object.keys(dataProcesada).forEach(key => {
+            const keyNormalizado = normalizarID(key);
+            if (keyNormalizado.includes(idNormalizado) || idNormalizado.includes(keyNormalizado)) {
+                punto = dataProcesada[key];
+                // Registrar la coincidencia para depuración
+                console.log(`Coincidencia parcial: ${id} con ${key}`);
+            }
+        });
+    }
+
     if (!punto) {
-        console.log(`No hay datos de presión para ID: ${id}`);
+        // Solo log para IDs no autogenerados
+        if (!id.toString().startsWith('feature_')) {
+            console.log(`No hay datos de presión para ID: ${id}`);
+        }
         return "#999"; // gris
     }
 
     const p = punto.pressure;
     if (!p && p !== 0) {
-        console.log(`Presión inválida para ID: ${id}: ${p}`);
         return "#999"; // gris
     }
 
-    if (p > 60) return "#4caf50";
-    if (p > 45) return "#ff9800";
-    return "#f44336";
+    if (p > 60) return "#4caf50";  // verde
+    if (p > 45) return "#ff9800";  // amarillo
+    return "#f44336";              // rojo
 }
 
 function actualizarColores(dataProcesada) {
     Object.entries(polylinesMap).forEach(([id, line]) => {
-        const color = obtenerColorPorPresion(id, dataProcesada);
-        line.setOptions({ strokeColor: color });
+        // Evitar duplicación - verificar si este ID es un ID primario
+        // (los IDs normalizados también están en el mapa para búsqueda)
+        if (polylines.includes(line)) {
+            const idNormalizado = normalizarID(id);
+            const color = obtenerColorPorPresion(id, idNormalizado, dataProcesada);
+            line.setOptions({ strokeColor: color });
+        }
     });
 }
 
+
 export function resaltarTramo(id) {
-    Object.values(polylinesMap).forEach(line => {
-        line.setOptions({ strokeWeight: 3, strokeOpacity: 0.3 });
+    if (!id) return;
+
+    const idNormalizado = normalizarID(id);
+
+    // Restaurar todas las líneas a su estado normal
+    Object.values(polylines).forEach(line => {
+        if (line && line.setOptions) {
+            line.setOptions({ strokeWeight: 3, strokeOpacity: 0.3 });
+        }
     });
 
-    const line = polylinesMap[id];
+    // Intentar encontrar la línea por varias coincidencias
+    let line = polylinesMap[id] || polylinesMap[idNormalizado];
+
+    // Si no se encuentra, buscar por coincidencia parcial
+    if (!line) {
+        let bestMatchKey = null;
+        let bestMatchScore = 0;
+
+        // Buscar la mejor coincidencia parcial
+        Object.keys(polylinesMap).forEach(key => {
+            const keyNorm = normalizarID(key);
+
+            // Calcular un "puntaje" de coincidencia
+            let score = 0;
+
+            // Coincidencia exacta es la mejor
+            if (keyNorm === idNormalizado) {
+                score = 100;
+            }
+            // Coincidencia parcial - uno contiene al otro
+            else if (keyNorm.includes(idNormalizado) || idNormalizado.includes(keyNorm)) {
+                // Mayor puntaje para coincidencias más largas
+                score = Math.min(keyNorm.length, idNormalizado.length) /
+                    Math.max(keyNorm.length, idNormalizado.length) * 90;
+            }
+
+            if (score > bestMatchScore) {
+                bestMatchScore = score;
+                bestMatchKey = key;
+            }
+        });
+
+        if (bestMatchKey && bestMatchScore > 50) {
+            console.log(`Usando coincidencia parcial para ID ${id}: ${bestMatchKey} (puntaje: ${bestMatchScore})`);
+            line = polylinesMap[bestMatchKey];
+        }
+    }
+
     if (line) {
+        // Resaltar la línea encontrada
         line.setOptions({
             strokeWeight: 6,
             strokeOpacity: 1
         });
+
+        // Centrar el mapa en esta línea si es posible
+        if (mapInstance && line.getPath && line.getPath().getLength() > 0) {
+            const path = line.getPath();
+            const midIndex = Math.floor(path.getLength() / 2);
+            mapInstance.panTo(path.getAt(midIndex));
+        }
     } else {
-        console.warn(`No se encontró el tramo con ID: ${id}`);
+        console.warn(`No se encontró el tramo con ID: ${id} (normalizado: ${idNormalizado})`);
+        console.log("IDs disponibles:", Object.keys(polylinesMap).filter(k => !k.startsWith('feature_')));
+    }
+}
+
+function extraerInfoDeHTML(htmlString) {
+    try {
+        // Crear un elemento temporal para parsear el HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlString;
+
+        // Extraer información útil de la tabla
+        const infoObj = {};
+        const rows = tempDiv.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 2) {
+                const key = cells[0].textContent.trim();
+                const value = cells[1].textContent.trim();
+                if (key && value) {
+                    infoObj[key] = value;
+                }
+            }
+        });
+
+        return infoObj;
+    } catch (error) {
+        console.error("Error al extraer info de HTML:", error);
+        return {};
     }
 }
 
