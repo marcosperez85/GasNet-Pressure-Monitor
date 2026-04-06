@@ -99,9 +99,9 @@ export const MEASUREMENT_POINTS = {
             pressure: '46.3 bar'
         },
         {
-            id: '037-082',
+            id: '037-091',
             title: 'Sistema Balcarce',
-            subtitle: 'Conexión regional',
+            subtitle: '037-091',
 
             nombres: {
                 puntoUpstream: 'Balcarce I',
@@ -134,7 +134,7 @@ export const MEASUREMENT_POINTS = {
         {
             id: '036-032',
             title: 'Sistema MDP Ciudad',
-            subtitle: 'Conexión regional',
+            subtitle: '036-032',
 
             nombres: {
                 puntoUpstream: 'PM 203 - El Chourron',
