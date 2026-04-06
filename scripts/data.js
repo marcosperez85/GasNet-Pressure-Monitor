@@ -32,7 +32,7 @@ export const MEASUREMENT_POINTS = {
     ],
     'Mar del Plata': [
         {
-            id: 'ID_00092',
+            id: '037-001',
             title: 'Sistema Tandil - MDP',
             subtitle: '037-001',
 
