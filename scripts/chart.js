@@ -20,14 +20,15 @@ function calcularArea(D) {
     return Math.PI * Math.pow(D, 2) / 4;
 }
 
-function calcularLinepack(P, config) {
+export function calcularLinepack(P, config) {
     const { D, L, Z, T, R } = config;
     const A = calcularArea(D);
 
     return (P * A * L) / (Z * R * T);
 }
 
-function calcularAutonomia(LP, Q) {
+// Exportamos esta función para usarla en processCurrentValues.js
+export function calcularAutonomia(LP, Q) {
     if (!Q || Q === 0) return null;
     return LP / Q;
 }
@@ -67,30 +68,24 @@ function createLinepackChart() {
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                // Arreglamos el tooltip para mostrar ambas series
                 let result = params[0].axisValueLabel + '<br/>';
+                let value = params[0].value;
+                let formattedValue = value !== null && value !== undefined
+                    ? value.toFixed(2)
+                    : 'N/A';
 
-                // Iteramos sobre cada serie en el tooltip
-                params.forEach(param => {
-                    let value = param.value;
-                    let formattedValue = value !== null && value !== undefined
-                        ? value.toFixed(2)
-                        : 'N/A';
-
-                    result += `${param.marker} ${param.seriesName}: <strong>${formattedValue}</strong><br/>`;
-                });
-
+                result += `${params[0].marker} Linepack: <strong>${formattedValue}</strong><br/>`;
                 return result;
             }
         },
         legend: {
-            data: ['Linepack', 'Autonomía'],
-            top: '10px', // Movemos la leyenda a la parte superior
-            right: '10%',  // La alineamos a la derecha
+            data: ['Linepack'],
+            top: '10px',
+            right: '10%',
             textStyle: {
-                color: '#e0e0e0' // Mejor contraste
+                color: '#e0e0e0'
             },
-            backgroundColor: 'rgba(42, 46, 53, 0.7)', // Fondo semi-transparente
+            backgroundColor: 'rgba(42, 46, 53, 0.7)',
             borderRadius: 4,
             padding: 5
         },
@@ -108,54 +103,29 @@ function createLinepackChart() {
                 color: '#e0e0e0'
             }
         },
-        yAxis: [
-            {
-                type: 'value',
-                name: 'Linepack',
-                scale: true,
-                axisLine: {
-                    lineStyle: { color: '#e0e0e0' }
-                },
-                axisLabel: {
-                    color: '#e0e0e0',
-                    fontSize: 12
-                },
-                nameTextStyle: {
-                    color: '#ff8c00',
-                    fontSize: 14,
-                    fontWeight: 'bold'
-                },
-                splitLine: {
-                    lineStyle: {
-                        type: 'dashed',
-                        color: '#ff8c00' // Color para líneas de Linepack
-                    }
-                }
+        yAxis: {
+            type: 'value',
+            name: 'Linepack (Sm³)',
+            scale: true,
+            axisLine: {
+                lineStyle: { color: '#e0e0e0' }
             },
-            {
-                type: 'value',
-                name: 'Autonomía',
-                scale: true,
-                axisLine: {
-                    lineStyle: { color: '#e0e0e0' }
-                },
-                axisLabel: {
-                    color: '#e0e0e0',
-                    fontSize: 12
-                },
-                nameTextStyle: {
-                    color: '#4caf50',
-                    fontSize: 14,
-                    fontWeight: 'bold'
-                },
-                splitLine: {
-                    lineStyle: {
-                        type: 'dashed',
-                        color: '#4caf50' // Color para líneas de Autonomía
-                    }
+            axisLabel: {
+                color: '#e0e0e0',
+                fontSize: 12
+            },
+            nameTextStyle: {
+                color: '#ff8c00',
+                fontSize: 14,
+                fontWeight: 'bold'
+            },
+            splitLine: {
+                lineStyle: {
+                    type: 'dashed',
+                    color: '#ff8c00'
                 }
             }
-        ],
+        },
         dataZoom: [
             { type: 'inside', start: 0, end: 100 },
             { start: 0, end: 100 }
@@ -167,17 +137,7 @@ function createLinepackChart() {
                 data: [],
                 smooth: true,
                 itemStyle: {
-                    color: '#ff8c00' // Color para Linepack
-                }
-            },
-            {
-                name: 'Autonomía',
-                type: 'line',
-                yAxisIndex: 1,
-                data: [],
-                smooth: true,
-                itemStyle: {
-                    color: '#4caf50' // Color para Autonomía
+                    color: '#ff8c00'
                 }
             }
         ]
@@ -206,30 +166,25 @@ function intentarActualizarGrafico() {
 
     const presionesUp = bufferPresionUp;
     const presionesDown = bufferPresionDown;
-    const caudales = bufferCaudal;
 
     const timestamps = formatearTimestampHistorico(
         presionesUp.map(p => p.timestamp)
     );
 
     const linepackValues = [];
-    const autonomiaValues = [];
 
     for (let i = 0; i < presionesUp.length; i++) {
         const P_up = parseFloat(presionesUp[i]?.value);
         const P_down = parseFloat(presionesDown[i]?.value);
-        const Q = parseFloat(caudales[i]?.value);
 
-        // 🔥 Promedio correcto
+        // Promedio de presiones
         const P_prom = (P_up + P_down) / 2;
 
         if (!AppState.selectedPoint) return;
         const config = AppState.selectedPoint.config;
         const LP = calcularLinepack(P_prom, config);
-        const t = calcularAutonomia(LP, Q);
 
         linepackValues.push(LP);
-        autonomiaValues.push(t);
     }
 
     AppState.trendChart.hideLoading();
@@ -237,8 +192,7 @@ function intentarActualizarGrafico() {
     AppState.trendChart.setOption({
         xAxis: { data: timestamps },
         series: [
-            { name: 'Linepack', data: linepackValues },
-            { name: 'Autonomía', data: autonomiaValues }
+            { name: 'Linepack', data: linepackValues }
         ]
     });
 }
@@ -317,7 +271,7 @@ export function initChart() {
         });
     }
 
-    // Caudal
+    // Caudal (seguimos necesitando los datos para otros cálculos)
     if (inputCaudalHist && EMBED.fieldTypeIsQuery(inputCaudalHist)) {
         EMBED.subscribeFieldToQueryChange(inputCaudalHist, data => {
             bufferCaudal = data;
