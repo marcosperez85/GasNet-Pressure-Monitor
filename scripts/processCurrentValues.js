@@ -1,5 +1,5 @@
 import { MEASUREMENT_POINTS } from './data.js';
-import { calcularLinepack } from './calcularLinepack.js';
+import { calcularLinepack, calcularAutonomia } from './chart.js'; // Importamos calcularAutonomia
 
 export function procesarCurrentValues(dataset) {
     // Estructura para almacenar resultados
@@ -50,14 +50,21 @@ export function procesarCurrentValues(dataset) {
         }
     });
 
-    // Calcular linepack
+    // Calcular linepack y autonomía
     const enriched = {};
 
     for (const title in resultado) {
         const r = resultado[title];
 
         if (r.up != null && r.down != null) {
-            const LP = calcularLinepack(r.up, r.down, r.config);
+            // Calcular presión promedio
+            const pressAvg = (r.up + r.down) / 2;
+            
+            // Calcular linepack
+            const LP = calcularLinepack(pressAvg, r.config);
+            
+            // Calcular autonomía aquí (ahora en processCurrentValues.js)
+            const autonomia = calcularAutonomia(LP, r.q);
             
             // Buscar el point en data.js para obtener el ID
             let pointID = null;
@@ -71,7 +78,8 @@ export function procesarCurrentValues(dataset) {
 
             const data = {
                 linepack: LP,
-                pressure: (r.up + r.down) / 2
+                pressure: pressAvg,
+                autonomia: autonomia    // Añadimos autonomía a los datos procesados
             };
 
             // Guardar datos por título
