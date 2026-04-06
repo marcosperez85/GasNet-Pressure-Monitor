@@ -56,7 +56,7 @@ export const MEASUREMENT_POINTS = {
                 T: 288,
                 R: 8.314,
                 thresholds: {
-                    green: 60,
+                    green: 50,
                     yellow: 45
                 }
             },

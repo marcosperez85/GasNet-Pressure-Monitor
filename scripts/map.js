@@ -652,7 +652,7 @@ function obtenerColorPorPresion(id, idNormalizado, dataProcesada) {
         return "#999"; // gris
     }
 
-    if (p > 60) return "#4caf50";  // verde
+    if (p > 50) return "#4caf50";  // verde
     if (p > 45) return "#ff9800";  // amarillo
     return "#f44336";              // rojo
 }
