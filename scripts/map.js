@@ -313,7 +313,7 @@ export function cargarGeoJSON(url, dataProcesada) {
                     // Terminado
                     setTimeout(() => {
                         progressIndicator.remove();
-                        console.log(`GeoJSON procesado: ${polylines.length} líneas creadas`);
+                        // console.log(`GeoJSON procesado: ${polylines.length} líneas creadas`);
                         geoJsonCargado = true;
                     }, 500);
                 }
@@ -422,7 +422,7 @@ function obtenerColorPorPresion(id, idNormalizado, dataProcesada) {
             if (keyNormalizado.includes(idNormalizado) || idNormalizado.includes(keyNormalizado)) {
                 punto = dataProcesada[key];
                 // Registrar la coincidencia para depuración
-                console.log(`Coincidencia parcial: ${id} con ${key}`);
+                // console.log(`Coincidencia parcial: ${id} con ${key}`);
             }
         });
     }
@@ -430,7 +430,7 @@ function obtenerColorPorPresion(id, idNormalizado, dataProcesada) {
     if (!punto) {
         // Solo log para IDs no autogenerados
         if (!id.toString().startsWith('feature_')) {
-            console.log(`No hay datos de presión para ID: ${id}`);
+            // console.log(`No hay datos de presión para ID: ${id}`);
         }
         return "#999"; // gris
     }
