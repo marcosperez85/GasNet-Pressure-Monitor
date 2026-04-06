@@ -200,7 +200,6 @@ export function seleccionarPuntoPorId(id) {
                     
                     puntoEncontrado = p;
                     unidadEncontrada = unidad;
-                    console.log(`Coincidencia encontrada: ${p.id} (${p.title}) en unidad '${unidad}'`);
                 }
             }
         });
@@ -209,10 +208,6 @@ export function seleccionarPuntoPorId(id) {
     if (puntoEncontrado) {
         console.log("Seleccionando punto:", puntoEncontrado);
         seleccionarPunto(puntoEncontrado);
-        
-        // También podemos expandir y resaltar la unidad correspondiente en el sidebar
-        // (esto depende de cómo está implementado tu sidebar)
-        
         return true;
     } else {
         console.warn(`No se encontró punto con ID: ${id}`);
