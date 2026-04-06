@@ -10,7 +10,6 @@ import {
 } from '../src/main.js';
 
 
-
 function createSegmentItem(point) {
     const $item = $('<div></div>').addClass('segmentItem');
 
@@ -30,12 +29,17 @@ function createSegmentItem(point) {
             <div class="metricLabel">Pressure</div>
             <div class="metricValue pressure-value">--</div>
         </div>
+        <div>
+            <div class="metricLabel">Autonomía</div>
+            <div class="metricValue autonomia-value">--</div>
+        </div>
     </div>
 `);
 
     setTimeout(() => $item.css('opacity', 1), 50);
     return $item[0];
 }
+
 
 export function updateMeasurementPoints(unit) {
     if (MEASUREMENT_POINTS[unit]) {
@@ -97,8 +101,7 @@ function seleccionarPunto(point) {
 }
 
 export function actualizarSidebarConDatos(dataProcesada) {
-
-    ordenarPorCriticidad(dataProcesada)
+    ordenarPorCriticidad(dataProcesada);
 
     $('.segmentItem').each(function () {
         const title = $(this).find('.segmentTitle').text().trim();
@@ -120,6 +123,7 @@ export function actualizarSidebarConDatos(dataProcesada) {
         if (!d) {
             $(this).find('.linepack-value').text('N/A');
             $(this).find('.pressure-value').text('N/A');
+            $(this).find('.autonomia-value').text('N/A');
             return;
         }
 
@@ -136,12 +140,17 @@ export function actualizarSidebarConDatos(dataProcesada) {
         $(this).find('.linepack-value').text(d.linepack.toFixed(2));
         $(this).find('.pressure-value').text(pressure.toFixed(2));
 
-        console.log('Processed:', dataProcesada);
+        // Mostrar autonomía (si existe)
+        if (d.autonomia !== null && d.autonomia !== undefined) {
+            $(this).find('.autonomia-value').text(`${d.autonomia.toFixed(2)} h`);
+        } else {
+            $(this).find('.autonomia-value').text('N/A');
+        }
     });
 }
 
 function ordenarPorCriticidad(dataProcesada) {
-    
+
     const ordenados = Object.entries(dataProcesada)
         .sort((a, b) => a[1].pressure - b[1].pressure);
 
@@ -180,31 +189,31 @@ function buscarPuntoPorId(id) {
 
 export function seleccionarPuntoPorId(id) {
     if (!id) return;
-    
+
     console.log(`Intentando seleccionar punto con ID: ${id}`);
     const idNormalizado = normalizarID(id);
-    
+
     // Intentar encontrar el punto por ID exacto o normalizado
     let puntoEncontrado = null;
     let unidadEncontrada = null;
-    
+
     for (const unidad in MEASUREMENT_POINTS) {
         MEASUREMENT_POINTS[unidad].forEach(p => {
             if (p.id) {
                 const pIdNormalizado = normalizarID(p.id);
-                
+
                 // Verificar coincidencia exacta o si uno contiene al otro
-                if (pIdNormalizado === idNormalizado || 
-                    pIdNormalizado.includes(idNormalizado) || 
+                if (pIdNormalizado === idNormalizado ||
+                    pIdNormalizado.includes(idNormalizado) ||
                     idNormalizado.includes(pIdNormalizado)) {
-                    
+
                     puntoEncontrado = p;
                     unidadEncontrada = unidad;
                 }
             }
         });
     }
-    
+
     if (puntoEncontrado) {
         console.log("Seleccionando punto:", puntoEncontrado);
         seleccionarPunto(puntoEncontrado);
