@@ -1,5 +1,11 @@
 import { MEASUREMENT_POINTS } from './data.js';
-import { calcularLinepack, calcularAutonomia } from './chart.js'; // Importamos calcularAutonomia
+import { 
+    calcularPresionPromedio, 
+    calcularLinepack, 
+    calcularAutonomia,
+    pascalesABares,
+    escalarLinepack
+} from './calcularLinepack.js';
 
 export function procesarCurrentValues(dataset) {
     // Estructura para almacenar resultados
@@ -50,24 +56,16 @@ export function procesarCurrentValues(dataset) {
         }
     });
 
-    // Calcular linepack y autonomía
+    // Calcular linepack y autonomía usando funciones centralizadas
     const enriched = {};
 
     for (const title in resultado) {
         const r = resultado[title];
 
         if (r.up != null && r.down != null) {
-            // Calcular presión promedio
-            // El factor 2* 1.013 corresponde a sacar factor común de la presión ambiental para convertir
-            // la presión de historian (relativa o manométrica) en presión absoluta para el cálculo de linepack
-            // El valor de 1.013 es la presión ambiental en bares (porque la previsón proveniente de Historian está en bares).
-            // El factor de 1e5 (10 x e^5) es la conversion de bares a pascales.
-            const pressAvg = ((r.up + r.down + 2 * 1.013) * 1e5) / 2;
-
-            // Calcular linepack
+            // Usar las funciones centralizadas
+            const pressAvg = calcularPresionPromedio(r.up, r.down);
             const LP = calcularLinepack(pressAvg, r.config);
-
-            // Calcular autonomía aquí (ahora en processCurrentValues.js)
             const autonomia = calcularAutonomia(LP, r.q);
 
             // Buscar el point en data.js para obtener el ID
@@ -81,9 +79,10 @@ export function procesarCurrentValues(dataset) {
             }
 
             const data = {
-                linepack: LP / 1e7,         // Divido por 1e7 para facilitar la lectura
-                pressure: pressAvg / 1e5,   // Divido por 1e5 para convertir de pascales a bares
-                autonomia: autonomia        // Añadimos autonomía a los datos procesados
+                linepack: escalarLinepack(LP),  // Usando la función de escala centralizada
+                pressure: pascalesABares(pressAvg), // Convertir a bares para visualización
+                autonomia: autonomia,
+                config: r.config // Incluimos la configuración para acceder a thresholds
             };
 
             // Guardar datos por título

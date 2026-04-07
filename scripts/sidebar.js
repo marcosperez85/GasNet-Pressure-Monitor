@@ -9,7 +9,6 @@ import {
     endDateGlobal
 } from '../src/main.js';
 
-
 function createSegmentItem(point) {
     const $item = $('<div></div>').addClass('segmentItem');
 
@@ -39,7 +38,6 @@ function createSegmentItem(point) {
     setTimeout(() => $item.css('opacity', 1), 50);
     return $item[0];
 }
-
 
 export function updateMeasurementPoints(unit) {
     if (MEASUREMENT_POINTS[unit]) {
@@ -100,7 +98,6 @@ function seleccionarPunto(point) {
     resaltarTramo(point.id);
 }
 
-
 export function actualizarSidebarConDatos(dataProcesada) {
     ordenarPorCriticidad(dataProcesada);
 
@@ -108,7 +105,7 @@ export function actualizarSidebarConDatos(dataProcesada) {
         const title = $(this).find('.segmentTitle').text().trim();
         const d = dataProcesada[title];
 
-        // 🔥 buscar el point real desde data.js
+        // 🔥 buscar el point real desde data.js para obtener thresholds
         let pointConfig = null;
 
         for (const unidad in MEASUREMENT_POINTS) {
@@ -152,7 +149,6 @@ export function actualizarSidebarConDatos(dataProcesada) {
 }
 
 function ordenarPorCriticidad(dataProcesada) {
-
     const ordenados = Object.entries(dataProcesada)
         .sort((a, b) => a[1].pressure - b[1].pressure);
 
@@ -164,7 +160,6 @@ function ordenarPorCriticidad(dataProcesada) {
         el.css('order', index); // requiere flexbox
     });
 }
-
 
 // Actualizar el endTime cada vez que se presiona en una Unidad de Negocio para forzar un queryChange en el
 // query de CurrentValueDataSet.
@@ -231,7 +226,6 @@ function normalizarID(id) {
     if (!id) return '';
     return String(id).trim().toLowerCase();
 }
-
 
 // Exponer función para uso global
 window.seleccionarPuntoPorId = seleccionarPuntoPorId;

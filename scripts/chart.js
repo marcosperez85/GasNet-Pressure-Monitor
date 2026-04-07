@@ -1,6 +1,12 @@
 import { DOM } from './dom';
 import { AppState } from './state';
 import {
+    calcularPresionPromedio, 
+    calcularLinepack, 
+    calcularAutonomia,
+    escalarLinepack
+} from './calcularLinepack';
+import {
     inputPEntradaUpHist,
     inputPEntradaDownHist,
     inputCaudalHist,
@@ -11,27 +17,6 @@ import {
     $boton14d,
     $boton30d
 } from '../src/main.js';
-
-// ==============================
-// 🧠 CÁLCULOS
-// ==============================
-
-function calcularArea(D) {
-    return Math.PI * Math.pow(D, 2) / 4;
-}
-
-export function calcularLinepack(P, config) {
-    const { D, L, Z, T, R } = config;
-    const A = calcularArea(D);
-
-    return (P * A * L) / (Z * R * T);
-}
-
-// Exportamos esta función para usarla en processCurrentValues.js
-export function calcularAutonomia(LP, Q) {
-    if (!Q || Q === 0) return null;
-    return LP / Q;
-}
 
 // ==============================
 // 🕒 FORMATOS
@@ -177,18 +162,14 @@ function intentarActualizarGrafico() {
         const P_up = parseFloat(presionesUp[i]?.value);
         const P_down = parseFloat(presionesDown[i]?.value);
 
-        // Promedio de presiones
-        // El factor 2* 1.013 corresponde a sacar factor común de la presión ambiental para convertir
-        // la presión de historian (relativa o manométrica) en presión absoluta para el cálculo de linepack
-        // El valor de 1.013 es la presión ambiental en bares (porque la previsón proveniente de Historian está en bares).
-        // El factor de 1e5 (10 x e^5) es la conversion de bares a pascales.
-        const P_prom = ((P_up + P_down + 2* 1.013)* 1e5) / 2;
-
         if (!AppState.selectedPoint) return;
         const config = AppState.selectedPoint.config;
+
+        // Usar las funciones centralizadas
+        const P_prom = calcularPresionPromedio(P_up, P_down);
         const LP = calcularLinepack(P_prom, config);
 
-        linepackValues.push(LP / 1e7);
+        linepackValues.push(escalarLinepack(LP));
     }
 
     AppState.trendChart.hideLoading();
