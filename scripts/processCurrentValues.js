@@ -6,7 +6,7 @@ export function procesarCurrentValues(dataset) {
     const resultado = {};
     // Mapa para relacionar ID con título
     const idTitleMap = {};
-    
+
     // Crear el mapa de ID a título y inicializar estructura
     for (const unidad in MEASUREMENT_POINTS) {
         MEASUREMENT_POINTS[unidad].forEach(p => {
@@ -16,7 +16,7 @@ export function procesarCurrentValues(dataset) {
                 q: null,
                 config: p.config
             };
-            
+
             // Si el punto tiene ID, guardamos la relación
             if (p.id) {
                 idTitleMap[p.id] = p.title;
@@ -58,14 +58,18 @@ export function procesarCurrentValues(dataset) {
 
         if (r.up != null && r.down != null) {
             // Calcular presión promedio
-            const pressAvg = (r.up + r.down) / 2;
-            
+            // El factor 2* 1.013 corresponde a sacar factor común de la presión ambiental para convertir
+            // la presión de historian (relativa o manométrica) en presión absoluta para el cálculo de linepack
+            // El valor de 1.013 es la presión ambiental en bares (porque la previsón proveniente de Historian está en bares).
+            // El factor de 1e5 (10 x e^5) es la conversion de bares a pascales.
+            const pressAvg = ((r.up + r.down + 2 * 1.013) * 1e5) / 2;
+
             // Calcular linepack
             const LP = calcularLinepack(pressAvg, r.config);
-            
+
             // Calcular autonomía aquí (ahora en processCurrentValues.js)
             const autonomia = calcularAutonomia(LP, r.q);
-            
+
             // Buscar el point en data.js para obtener el ID
             let pointID = null;
             for (const unidad in MEASUREMENT_POINTS) {
@@ -77,20 +81,20 @@ export function procesarCurrentValues(dataset) {
             }
 
             const data = {
-                linepack: LP,
-                pressure: pressAvg,
-                autonomia: autonomia    // Añadimos autonomía a los datos procesados
+                linepack: LP / 1e7,         // Divido por 1e7 para facilitar la lectura
+                pressure: pressAvg / 1e5,   // Divido por 1e5 para convertir de pascales a bares
+                autonomia: autonomia        // Añadimos autonomía a los datos procesados
             };
 
             // Guardar datos por título
             enriched[title] = data;
-            
+
             // Si existe un ID para este título, también guardar una referencia al mismo objeto
             if (pointID) {
                 enriched[pointID] = data;
             }
         }
     }
-    
+
     return enriched;
 }
