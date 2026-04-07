@@ -120,14 +120,14 @@ function createLinepackChart() {
                 name: 'Autonomía (h)',
                 scale: true,
                 axisLine: {
-                    lineStyle: { color: '#00c853' }
+                    lineStyle: { color: '#a1a1a1' }
                 },
                 axisLabel: {
-                    color: '#00c853',
+                    color: '#a1a1a1',
                     fontSize: 12
                 },
                 nameTextStyle: {
-                    color: '#00c853',
+                    color: '#a1a1a1',
                     fontSize: 14,
                     fontWeight: 'bold'
                 },
@@ -147,7 +147,37 @@ function createLinepackChart() {
                 data: [],
                 smooth: true,
                 yAxisIndex: 0,
-                itemStyle: { color: '#356dfa' }
+                itemStyle: { color: '#356dfa' },
+
+                markLine: {
+                    silent: true,
+                    symbol: 'none',
+                    lineStyle: {
+                        width: 2
+                    },
+                    data: [
+                        {
+                            yAxis: 4.7,
+                            lineStyle: { color: '#4caf50' },
+                            label: {
+                                formatter: 'LP Medio',
+                                color: '#e0e0e0',
+                                position: 'start',   // Separación del eje Y
+                                distance: 25   // Separación del eje Y
+                            }
+                        },
+                        {
+                            yAxis: 3.8,
+                            lineStyle: { color: '#f44336' },
+                            label: {
+                                formatter: 'LP Crítico',
+                                color: '#e0e0e0',
+                                position: 'start',
+                                distance: 25   // Separación del eje Y
+                            }
+                        }
+                    ]
+                }
             },
             {
                 name: 'Autonomía',
@@ -155,7 +185,7 @@ function createLinepackChart() {
                 data: [],
                 smooth: true,
                 yAxisIndex: 1,
-                itemStyle: { color: '#00c853' }
+                itemStyle: { color: '#be3e2d' }
             }
         ]
     };
