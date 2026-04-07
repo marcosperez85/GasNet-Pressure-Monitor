@@ -633,8 +633,6 @@ function obtenerColorPorPresion(id, idNormalizado, dataProcesada) {
             const keyNormalizado = normalizarID(key);
             if (keyNormalizado.includes(idNormalizado) || idNormalizado.includes(keyNormalizado)) {
                 punto = dataProcesada[key];
-                // Registrar la coincidencia para depuración
-                // console.log(`Coincidencia parcial: ${id} con ${key}`);
             }
         });
     }
@@ -651,9 +649,16 @@ function obtenerColorPorPresion(id, idNormalizado, dataProcesada) {
     if (!p && p !== 0) {
         return "#999"; // gris
     }
+    
+    // Buscar el punto correspondiente en MEASUREMENT_POINTS para obtener sus thresholds
+    let thresholds = { green: 50, yellow: 45 }; // Valores por defecto solo como fallback
+    
+    if (punto.config && punto.config.thresholds) {
+        thresholds = punto.config.thresholds;
+    }
 
-    if (p > 50) return "#4caf50";  // verde
-    if (p > 45) return "#ff9800";  // amarillo
+    if (p > thresholds.green) return "#4caf50";  // verde
+    if (p > thresholds.yellow) return "#ff9800";  // amarillo
     return "#f44336";              // rojo
 }
 

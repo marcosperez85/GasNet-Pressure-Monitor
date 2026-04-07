@@ -100,6 +100,7 @@ function seleccionarPunto(point) {
     resaltarTramo(point.id);
 }
 
+
 export function actualizarSidebarConDatos(dataProcesada) {
     ordenarPorCriticidad(dataProcesada);
 
@@ -118,7 +119,8 @@ export function actualizarSidebarConDatos(dataProcesada) {
             }
         }
 
-        const thresholds = pointConfig?.config?.thresholds || { green: 60, yellow: 45 };
+        // Usar thresholds del punto o valores por defecto solo como fallback
+        const thresholds = pointConfig?.config?.thresholds || { green: 50, yellow: 45 };
 
         if (!d) {
             $(this).find('.linepack-value').text('N/A');
