@@ -1,8 +1,8 @@
 import { DOM } from './dom';
 import { AppState } from './state';
 import {
-    calcularPresionPromedio, 
-    calcularLinepack, 
+    calcularPresionPromedio,
+    calcularLinepack,
     calcularAutonomia,
     escalarLinepack
 } from './calcularLinepack';
@@ -54,17 +54,20 @@ function createLinepackChart() {
             trigger: 'axis',
             formatter: function (params) {
                 let result = params[0].axisValueLabel + '<br/>';
-                let value = params[0].value;
-                let formattedValue = value !== null && value !== undefined
-                    ? value.toFixed(2)
-                    : 'N/A';
 
-                result += `${params[0].marker} Linepack: <strong>${formattedValue}</strong><br/>`;
+                params.forEach(p => {
+                    let value = p.value !== null && p.value !== undefined
+                        ? p.value.toFixed(2)
+                        : 'N/A';
+
+                    result += `${p.marker} ${p.seriesName}: <strong>${value}</strong><br/>`;
+                });
+
                 return result;
             }
         },
         legend: {
-            data: ['Linepack'],
+            data: ['Linepack', 'Autonomía'],
             top: '10px',
             right: '10%',
             textStyle: {
@@ -87,30 +90,52 @@ function createLinepackChart() {
             nameTextStyle: {
                 color: '#e0e0e0'
             }
-        }, 
-        yAxis: {
-            type: 'value',
-            name: 'Linepack (Sm³ x 10⁷)',
-            scale: true,
-            axisLine: {
-                lineStyle: { color: '   #e0e0e0' }
+        },
+        yAxis: [
+            {
+                type: 'value',
+                name: 'Linepack (Sm³ x 10⁷)',
+                scale: true,
+                axisLine: {
+                    lineStyle: { color: '#e0e0e0' }
+                },
+                axisLabel: {
+                    color: '#e0e0e0',
+                    fontSize: 12
+                },
+                nameTextStyle: {
+                    color: '#e0e0e0',
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                },
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed',
+                        color: '#a1a1a1'
+                    }
+                }
             },
-            axisLabel: {
-                color: '#e0e0e0',
-                fontSize: 12
-            },
-            nameTextStyle: {
-                color: '#e0e0e0',
-                fontSize: 14,
-                fontWeight: 'bold'
-            },
-            splitLine: {
-                lineStyle: {
-                    type: 'dashed',
-                    color: '#a1a1a1'
+            {
+                type: 'value',
+                name: 'Autonomía (h)',
+                scale: true,
+                axisLine: {
+                    lineStyle: { color: '#00c853' }
+                },
+                axisLabel: {
+                    color: '#00c853',
+                    fontSize: 12
+                },
+                nameTextStyle: {
+                    color: '#00c853',
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                },
+                splitLine: {
+                    show: false
                 }
             }
-        },
+        ],
         dataZoom: [
             { type: 'inside', start: 0, end: 100 },
             { start: 0, end: 100 }
@@ -121,9 +146,16 @@ function createLinepackChart() {
                 type: 'line',
                 data: [],
                 smooth: true,
-                itemStyle: {
-                    color: '#356dfa'
-                }
+                yAxisIndex: 0,
+                itemStyle: { color: '#356dfa' }
+            },
+            {
+                name: 'Autonomía',
+                type: 'line',
+                data: [],
+                smooth: true,
+                yAxisIndex: 1,
+                itemStyle: { color: '#00c853' }
             }
         ]
     };
@@ -157,19 +189,29 @@ function intentarActualizarGrafico() {
     );
 
     const linepackValues = [];
+    const autonomiaValues = [];
 
     for (let i = 0; i < presionesUp.length; i++) {
         const P_up = parseFloat(presionesUp[i]?.value);
         const P_down = parseFloat(presionesDown[i]?.value);
+        const Q = parseFloat(bufferCaudal[i]?.value);
 
         if (!AppState.selectedPoint) return;
         const config = AppState.selectedPoint.config;
 
-        // Usar las funciones centralizadas
+        // Linepack (igual que antes)
         const P_prom = calcularPresionPromedio(P_up, P_down);
         const LP = calcularLinepack(P_prom, config);
 
         linepackValues.push(escalarLinepack(LP));
+
+        // 🔥 NUEVO: Autonomía
+        const autonomia = calcularAutonomia(LP, Q);
+
+        // manejar nulls para el chart
+        autonomiaValues.push(
+            autonomia !== null ? autonomia : null
+        );
     }
 
     AppState.trendChart.hideLoading();
@@ -177,7 +219,8 @@ function intentarActualizarGrafico() {
     AppState.trendChart.setOption({
         xAxis: { data: timestamps },
         series: [
-            { name: 'Linepack', data: linepackValues }
+            { name: 'Linepack', data: linepackValues },
+            { name: 'Autonomía', data: autonomiaValues }
         ]
     });
 }
@@ -245,7 +288,7 @@ export function initChart() {
         EMBED.subscribeFieldToQueryChange(inputPEntradaUpHist, data => {
             bufferPresionUp = data;
             intentarActualizarGrafico();
-         });
+        });
     }
 
     // Presión downstream
