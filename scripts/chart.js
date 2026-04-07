@@ -120,14 +120,14 @@ function createLinepackChart() {
                 name: 'Autonomía (h)',
                 scale: true,
                 axisLine: {
-                    lineStyle: { color: '#a1a1a1' }
+                    lineStyle: { color: '#e0e0e0' }
                 },
                 axisLabel: {
-                    color: '#a1a1a1',
+                    color: '#e0e0e0',
                     fontSize: 12
                 },
                 nameTextStyle: {
-                    color: '#a1a1a1',
+                    color: '#e0e0e0',
                     fontSize: 14,
                     fontWeight: 'bold'
                 },
@@ -163,7 +163,7 @@ function createLinepackChart() {
                                 formatter: 'LP Medio',
                                 color: '#e0e0e0',
                                 position: 'start',   // Separación del eje Y
-                                distance: 25   // Separación del eje Y
+                                distance: 35   // Separación del eje Y
                             }
                         },
                         {
@@ -173,7 +173,7 @@ function createLinepackChart() {
                                 formatter: 'LP Crítico',
                                 color: '#e0e0e0',
                                 position: 'start',
-                                distance: 25   // Separación del eje Y
+                                distance: 35   // Separación del eje Y
                             }
                         }
                     ]
