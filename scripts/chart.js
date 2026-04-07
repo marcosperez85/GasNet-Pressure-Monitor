@@ -102,27 +102,27 @@ function createLinepackChart() {
             nameTextStyle: {
                 color: '#e0e0e0'
             }
-        },
+        }, 
         yAxis: {
             type: 'value',
-            name: 'Linepack (Sm³)',
+            name: 'Linepack (Sm³ x 10⁷)',
             scale: true,
             axisLine: {
-                lineStyle: { color: '#e0e0e0' }
+                lineStyle: { color: '   #e0e0e0' }
             },
             axisLabel: {
                 color: '#e0e0e0',
                 fontSize: 12
             },
             nameTextStyle: {
-                color: '#ff8c00',
+                color: '#e0e0e0',
                 fontSize: 14,
                 fontWeight: 'bold'
             },
             splitLine: {
                 lineStyle: {
                     type: 'dashed',
-                    color: '#ff8c00'
+                    color: '#a1a1a1'
                 }
             }
         },
@@ -137,7 +137,7 @@ function createLinepackChart() {
                 data: [],
                 smooth: true,
                 itemStyle: {
-                    color: '#ff8c00'
+                    color: '#356dfa'
                 }
             }
         ]
@@ -178,13 +178,17 @@ function intentarActualizarGrafico() {
         const P_down = parseFloat(presionesDown[i]?.value);
 
         // Promedio de presiones
-        const P_prom = (P_up + P_down) / 2;
+        // El factor 2* 1.013 corresponde a sacar factor común de la presión ambiental para convertir
+        // la presión de historian (relativa o manométrica) en presión absoluta para el cálculo de linepack
+        // El valor de 1.013 es la presión ambiental en bares (porque la previsón proveniente de Historian está en bares).
+        // El factor de 1e5 (10 x e^5) es la conversion de bares a pascales.
+        const P_prom = ((P_up + P_down + 2* 1.013)* 1e5) / 2;
 
         if (!AppState.selectedPoint) return;
         const config = AppState.selectedPoint.config;
         const LP = calcularLinepack(P_prom, config);
 
-        linepackValues.push(LP);
+        linepackValues.push(LP / 1e7);
     }
 
     AppState.trendChart.hideLoading();
