@@ -52,8 +52,8 @@ export const MEASUREMENT_POINTS = {
             config: {
                 D: 0.4572,  // 18pulgadas pasadas a metros
                 L: 157900,  // longitud en metros
-                Z: 1,       // Factor de compresibilidad promedio
-                T: 333,     // Temperatura absoluta promedio (288K = 15°C // 333K = 60°C )
+                Z: 0.96,    // Factor de compresibilidad promedio
+                T: 288,     // Temperatura absoluta promedio (288K = 15°C // 333K = 60°C )
                 R: 8.314,   // Constante universal de los gases
                 thresholds: {
                     green: 50,
@@ -82,7 +82,7 @@ export const MEASUREMENT_POINTS = {
             config: {
                 D: 0.4572,
                 L: 129420,
-                Z: 1,
+                Z: 0.96,
                 T: 288,
                 R: 8.314,
                 thresholds: {
@@ -112,7 +112,7 @@ export const MEASUREMENT_POINTS = {
             config: {
                 D: 0.4572,
                 L: 129420,
-                Z: 1,
+                Z: 0.96,
                 T: 288,
                 R: 8.314,
                 thresholds: {
@@ -143,7 +143,7 @@ export const MEASUREMENT_POINTS = {
             config: {
                 D: 0.4572,
                 L: 129420,
-                Z: 1,
+                Z: 0.96,
                 T: 288,
                 R: 8.314,
                 thresholds: {
