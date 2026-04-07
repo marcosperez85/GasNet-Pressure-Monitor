@@ -26,7 +26,7 @@ function createSegmentItem(point) {
             <div class="metricValue linepack-value">--</div>
         </div>
         <div>
-            <div class="metricLabel">Pressure</div>
+            <div class="metricLabel">Presión Prom.</div>
             <div class="metricValue pressure-value">--</div>
         </div>
         <div>
