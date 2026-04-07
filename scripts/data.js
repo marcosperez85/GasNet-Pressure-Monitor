@@ -1,33 +1,33 @@
 export const MEASUREMENT_POINTS = {
     // UNIDADES DE NEGOCIO Y PUNTOS DE MEDICIÓN DE DISTRIBUIDORA PAMPEANA
     'Bahía Blanca': [
-        { title: 'Bahía Blanca', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Pigüé', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
-        { title: 'Industrias', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' },
-        { title: 'TGS', subtitle: 'Distribución urbana', linepack: '6.4 Sm3', pressure: '44.1 bar' }
+        { title: 'Bahía Blanca', subtitle: 'Conexión regional'},
+        { title: 'Pigüé', subtitle: 'Distribución costera'},
+        { title: 'Industrias', subtitle: 'Nodo secundario'},
+        { title: 'TGS', subtitle: 'Distribución urbana'}
     ],
     'Buenos Aires Centro': [
-        { title: 'Puntos TGS', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Plantas Propias', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
-        { title: 'Industrias', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' },
-        { title: 'Compresora El Chourrón', subtitle: 'Distribución urbana', linepack: '6.4 Sm3', pressure: '44.1 bar' }
+        { title: 'Puntos TGS', subtitle: 'Conexión regional'},
+        { title: 'Plantas Propias', subtitle: 'Distribución costera'},
+        { title: 'Industrias', subtitle: 'Nodo secundario'},
+        { title: 'Compresora El Chourrón', subtitle: 'Distribución urbana'}
     ],
     'Buenos Aires Norte': [
-        { title: 'CO Chivilcoy', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'CO Lobos', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' }
+        { title: 'CO Chivilcoy', subtitle: 'Conexión regional'},
+        { title: 'CO Lobos', subtitle: 'Distribución costera'}
     ],
     'Buenos Aires Sur': [
-        { title: 'CO Necochea', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'CO Tres Arroyos', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' }
+        { title: 'CO Necochea', subtitle: 'Conexión regional'},
+        { title: 'CO Tres Arroyos', subtitle: 'Distribución costera'}
     ],
     'La Pampa': [
-        { title: 'Pampeano Norte', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Pampeano Sur', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
-        { title: 'Medanito', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' }
+        { title: 'Pampeano Norte', subtitle: 'Conexión regional'},
+        { title: 'Pampeano Sur', subtitle: 'Distribución costera'},
+        { title: 'Medanito', subtitle: 'Nodo secundario'}
     ],
     'La Plata': [
-        { title: 'Despacho Pantalla 1', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Despacho Pantalla 2', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' }
+        { title: 'Despacho Pantalla 1', subtitle: 'Conexión regional'},
+        { title: 'Despacho Pantalla 2', subtitle: 'Distribución costera'}
 
     ],
     'Mar del Plata': [
@@ -50,20 +50,16 @@ export const MEASUREMENT_POINTS = {
 
             // 🔥 CONFIG FÍSICA
             config: {
-                D: 0.4572,
-                L: 157900,
-                Z: 1,
-                T: 288,
-                R: 8.314,
+                D: 0.4572,  // 18pulgadas pasadas a metros
+                L: 157900,  // longitud en metros
+                Z: 1,       // Factor de compresibilidad promedio
+                T: 333,     // Temperatura absoluta promedio (288K = 15°C // 333K = 60°C )
+                R: 8.314,   // Constante universal de los gases
                 thresholds: {
                     green: 50,
                     yellow: 45
                 }
-            },
-
-            linepack: '7.2 Sm3',
-            pressure: '46.3 bar',
-
+            }
         },
         {
             id: '036-026',
@@ -90,13 +86,10 @@ export const MEASUREMENT_POINTS = {
                 T: 288,
                 R: 8.314,
                 thresholds: {
-                    green: 60,
+                    green: 50,
                     yellow: 45
                 }
-            },
-
-            linepack: '7.2 Sm3',
-            pressure: '46.3 bar'
+            }
         },
         {
             id: '037-091',
@@ -123,13 +116,10 @@ export const MEASUREMENT_POINTS = {
                 T: 288,
                 R: 8.314,
                 thresholds: {
-                    green: 60,
+                    green: 50,
                     yellow: 45
                 }
-            },
-
-            linepack: '7.2 Sm3',
-            pressure: '46.3 bar'
+            }
         },
         {
             id: '036-032',
@@ -157,46 +147,43 @@ export const MEASUREMENT_POINTS = {
                 T: 288,
                 R: 8.314,
                 thresholds: {
-                    green: 60,
+                    green: 50,
                     yellow: 45
                 }
-            },
-
-            linepack: '7.2 Sm3',
-            pressure: '46.3 bar'
+            }
         }
     ],
 
     // UNIDADES DE NEGOCIO Y PUNTOS DE MEDICIÓN DE DISTRIBUIDORA DEL SUR
     'Andina': [
-        { title: '088 - Cordillerano', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' }
+        { title: '088 - Cordillerano', subtitle: 'Conexión regional'}
     ],
     'Comodoro Rivadavia': [
-        { title: 'Comodoro Rivadavia', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Despacho Comodoro Rivadavia', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' }
+        { title: 'Comodoro Rivadavia', subtitle: 'Conexión regional'},
+        { title: 'Despacho Comodoro Rivadavia', subtitle: 'Distribución costera'}
     ],
     'De los Lagos': [
-        { title: 'Cordillero Patagónico', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Región Sur', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
-        { title: 'Puntos de Medición Iridium', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' }
+        { title: 'Cordillero Patagónico', subtitle: 'Conexión regional'},
+        { title: 'Región Sur', subtitle: 'Distribución costera'},
+        { title: 'Puntos de Medición Iridium', subtitle: 'Nodo secundario'}
     ],
     'Del Comahue': [
-        { title: 'Del Comahue 1- Zona 1 - Neuquén', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' },
-        { title: 'Del Comahue 1 - Zona 2 - Río Negro', subtitle: 'Distribución costera', linepack: '5.8 Sm3', pressure: '42.5 bar' },
-        { title: 'Del Comahue 2', subtitle: 'Nodo secundario', linepack: '4.9 Sm3', pressure: '38.7 bar' },
-        { title: 'Del Comahue 3', subtitle: 'Distribución urbana', linepack: '6.4 Sm3', pressure: '44.1 bar' },
-        { title: 'Del Comahue 4', subtitle: 'Distribución urbana', linepack: '3.4 Sm3', pressure: '40.3 bar' }
+        { title: 'Del Comahue 1- Zona 1 - Neuquén', subtitle: 'Conexión regional'},
+        { title: 'Del Comahue 1 - Zona 2 - Río Negro', subtitle: 'Distribución costera'},
+        { title: 'Del Comahue 2', subtitle: 'Nodo secundario'},
+        { title: 'Del Comahue 3', subtitle: 'Distribución urbana'},
+        { title: 'Del Comahue 4', subtitle: 'Distribución urbana'}
     ],
     'Patagonia Norte': [
-        { title: 'Patagonia Norte', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' }
+        { title: 'Patagonia Norte', subtitle: 'Conexión regional'}
     ],
     'Península': [
-        { title: 'Península', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' }
+        { title: 'Península', subtitle: 'Conexión regional'}
     ],
     'Santa Cruz Sur': [
-        { title: 'Santa Cruz Sur', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' }
+        { title: 'Santa Cruz Sur', subtitle: 'Conexión regional'}
     ],
     'Tierra del Fuego': [
-        { title: 'Sistema Fueguino', subtitle: 'Conexión regional', linepack: '7.2 Sm3', pressure: '46.3 bar' }
+        { title: 'Sistema Fueguino', subtitle: 'Conexión regional'}
     ],
 };
