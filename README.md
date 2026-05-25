@@ -7,184 +7,202 @@ Un dashboard web para monitorear y predecir presiones en redes de gas, integrand
 Este proyecto implementa una interfaz de usuario para visualizar datos críticos del sistema de distribución de gas, incluyendo:
 
 - Presiones de entrada upstream y downstream
-- Predicciones de presión a 48 horas
+- Predicciones de presión mediante el cálculo de linepack
 - Variaciones de presión
 - Comparación con mínimos contractuales
 - Tiempo restante hasta alcanzar umbrales críticos
 - Consultas en lenguaje natural mediante chatbot integrado
 
-El dashboard está diseñado para ser desplegado como una página web estática en Amazon S3 o cualquier otro servicio de hosting, mientras que el chatbot se conecta a un endpoint de AWS API Gateway que ejecuta un modelo de lenguaje personalizado para consultas sobre datos de presión.
+El dashboard está diseñado para ser desplegado como una página web estática en Operations Hub, mientras que el chatbot se conecta a un endpoint de AWS API Gateway que ejecuta un modelo de Amazon Bedrock para realizar consultas en lenguaje natural sobre datos de presión y tramos críticos.
+
+Los archivos para el despliegue del chatbot se encuentran en un repositorio distinto para separar responsabilidades.
 
 ## Estructura del Proyecto
 
 ```
 GasNet-Pressure-Monitor/
-├── index.html          # Interfaz principal del dashboard
-├── js/
-│   ├── landing.js      # Lógica principal del dashboard
-│   └── config.js       # Configuración de API keys (creado por el usuario)
-├── chatbot/
-│   ├── index.html      # Interfaz del chatbot
-│   ├── chatbot.js      # Lógica del chatbot
-│   └── style_chatbot.css # Estilos del chatbot
-├── style_landing.css   # Estilos de la interfaz principal
-├── config.template.js  # Plantilla para configuración de API keys
-├── src/                # Scripts de procesamiento de datos
-│   └── 01_procesar_dataset.py  # Script para procesar y unificar datos
-├── data/               # Directorio para datasets
-│   ├── resultados_predicciones.csv  # Datos de predicciones
-│   └── dataset_2022-2025.json       # Datos procesados para la aplicación
-└── requirements.txt    # Dependencias de Python
+├── .git/                          # Repositorio git
+├── .gitignore                     # Archivo de exclusiones git
+├── .venv/                         # Entorno virtual (Python)
+├── config.js                      # Configuración principal
+├── config_template.js             # Plantilla de configuración
+├── package.json                   # Dependencias del proyecto
+├── webpack.config.js              # Configuración de Webpack
+├── README.md                       # Este archivo
+├── src/                           # Código fuente
+│   ├── index.html                 # Página principal
+│   ├── main.js                    # Punto de entrada
+│   ├── style.css                  # Estilos
+│   ├── manifest.json              # Manifest del plugin
+│   ├── customIcon.png             # Icono personalizado
+│   └── preview.png                # Vista previa
+├── scripts/                       # Scripts funcionales
+│   ├── calcularLinepack.js        # Cálculo de linepack
+│   ├── chart.js                   # Generación de gráficos
+│   ├── crearStringURL.js          # Creación de URLs dinámicas
+│   ├── data.js                    # Gestión de datos
+│   ├── dom.js                     # Manipulación del DOM
+│   ├── librerias/                 # Librerías externas
+│   ├── limpiarURLs.js             # Limpieza de URLs
+│   ├── map.js                     # Mapa interactivo
+│   ├── navigation.js              # Navegación
+│   ├── processCurrentValues.js    # Procesamiento de valores actuales
+│   ├── sidebar.js                 # Panel lateral
+│   └── state.js                   # Gestión de estado
+└── spec/                          # Especificaciones y tests
+    └── GasNet-Pressure-Monitor-3.1.0-3.2.0-spec.js
 ```
 
 ## Funcionalidades Principales
 
 - **Visualización Geoespacial**: Mapa interactivo con ubicaciones de puntos críticos de la red de gas
 - **Monitoreo de Presiones**: Visualización de datos de presión upstream y downstream
-- **Predicciones**: Proyección de presiones futuras con un horizonte de 48 horas
+- **Predicciones**: Proyección de presiones futuras mediante el concepto de Linepack
 - **Chatbot Inteligente**: Interfaz de consultas en lenguaje natural para interactuar con los datos
 
 ## Requisitos
 
 ### Para el desarrollo
-- Python 3.8+
-- pandas
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
+- Operations Hub 2025 (Classic Designer)
+- Node.js y npm
+- Git Bash (para desarrollo en Windows)
 
-### Para el despliegue
-- Servicio de hosting de sitios estáticos (Amazon S3, GitHub Pages, Netlify, etc.)
-- API Key de Google Maps válida
-- Conexión al endpoint de API Gateway para el chatbot (ya configurada en el código)
+## Configuración en Proficy Operations Hub
 
-## Instalación
+### 1. Queries Requeridos
 
-### 1. Clonar el repositorio
+Crear los siguientes queries en Operations Hub:
 
-```bash
-git clone https://github.com/[usuario]/GasNet-Pressure-Monitor.git
-cd GasNet-Pressure-Monitor
-```
+#### 1.1 P-Entrada-Up-Hist
+Presión de entrada histórica del punto upstream
 
-### 2. Configurar el entorno virtual de Python (para procesamiento de datos)
+**Configuración:**
+- Auto update: 2 min
+- Auto submit on input change: ✓
+- Row limit: 1000
+- Tag (string): `P-Entrada-Up-Global` (variable GLOBAL)
+- Sampling Mode: Interpolated
+- Start Time: `StartTime` (variable GLOBAL)
+- End Time: `endTime` (variable GLOBAL)
 
-#### En Windows
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-```
+#### 1.2 P-Entrada-Down-Hist
+Presión de entrada histórica del punto downstream
 
-#### En macOS/Linux
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+**Configuración:**
+- Auto update: 2 min
+- Auto submit on input change: ✓
+- Row limit: 1000
+- Tag (string): `P-Entrada-Down-Global` (variable GLOBAL)
+- Sampling Mode: Interpolated
+- Start Time: `StartTime` (variable GLOBAL)
+- End Time: `endTime` (variable GLOBAL)
 
-### 3. Configuración de la API Key de Google Maps y URL del API Gateway
+#### 1.3 Caudal-Hist
+Caudal instantáneo histórico (punto upstream)
 
-Por razones de seguridad, las claves de API no se incluyen en el control de versiones.
+**Configuración:**
+- Auto update: 2 min
+- Auto submit on input change: ✓
+- Row limit: 1000
+- Tag (string): `Caudal-Global` (variable GLOBAL)
+- Sampling Mode: Interpolated
+- Start Time: `StartTime` (variable GLOBAL)
+- End Time: `endTime` (variable GLOBAL)
 
-1. Crea un archivo llamado `./config.js` con el siguiente contenido:
-   ```javascript
-   const CONFIG = {
-     GOOGLE_MAPS_API_KEY: 'TU_CLAVE_API_GOOGLE_MAPS_AQUÍ',
-     API_GATEWAY_URL: 'URL DEL API GATEWAY'
-   };
+#### 1.4 Current-Value-Dataset
+Valor actual de TODOS los puntos a medir
+
+**Configuración:**
+- Auto submit (as soon as data is available): ✓
+- Auto update: 2 min
+- Auto submit on input change: ✓
+- Row limit: 50
+- Tag (string): `StringURLs-Global` (variable GLOBAL)
+- Sampling Mode: Current Value
+- Start Time: `StartTime` (variable GLOBAL)
+- End Time: `endTime` (variable GLOBAL)
+
+**Nota:** Cuando el Sampling Mode es "Current Value", el Start Time es irrelevante; solo importa que el End Time sea el actual.
+
+### 2. Variables Globales
+
+Crear las siguientes variables globales (todas del tipo `string`):
+
+| Variable | Valor Inicial | Descripción |
+|----------|--------------|-------------|
+| `P-Entrada-Up-Global` | `webhmi-model://PM 203 - El Chourron/P-Entrada` | URL del Asset Model para presión upstream |
+| `P-Entrada-Down-Global` | `webhmi-model://Invernada L1/P-Entrada` | URL del Asset Model para presión downstream |
+| `Caudal-Global` | `webhmi-model://PM 203 - El Chourron/Q-Inst` | URL del Asset Model para caudal instantáneo |
+| `StartTime` | `2026-04-03T12:00:00` | Fecha/hora inicio (formato ISO 8601) |
+| `EndTime` | `2026-04-03T13:00:00` | Fecha/hora fin (formato ISO 8601) |
+| `StringURLs-Global` | `webhmi-model://PM 203 - El Chourron/P-Entrada` | Concatenación de URLs separadas por comas para todos los puntos |
+| `DatosProcesados` | (vacío) | JSON con resultados de cálculos (scope: APP) |
+
+**Importante:** Aunque el script genera dinámicamente estas variables, es necesario proporcionar valores iniciales válidos para evitar que aparezca un banner de error al abrir la página por primera vez. Los valores iniciales provisionales aseguran que los queries ejecuten correctamente.
+
+### 3. Configuración del Plugin
+
+Mapear los siguientes campos del plugin Dashboard:
+
+| Campo del Plugin | Tipo | Referencia |
+|-----------------|------|-----------|
+| Presion de Entrada Upstream Historica | Query | `P-Entrada-Up-Hist` (All fields) |
+| Presion de Entrada Downstream Historica | Query | `P-Entrada-Down-Hist` (All fields) |
+| Caudal Historico | Query | `Caudal-Hist` (All fields) |
+| Valor actual de variables | Query | `Current-Value-Dataset` (All fields) |
+| Google Maps API KEY | Manual | Ingresar API KEY de Google Cloud |
+| URL del archivo GeoJSON | Manual | Ingresar URL del archivo GeoJSON |
+| Global de P-Entrada Upstream | Global | `P-Entrada-Up-Global` |
+| Global de P-Entrada Downstream | Global | `P-Entrada-Down-Global` |
+| Global de Caudal | Global | `Caudal-Global` |
+| Global de string de URLs | Global | `StringURLs-Global` |
+| Fecha de inicio | Global | `StartTime` |
+| Fecha de fin | Global | `EndTime` |
+| Array Global de datos procesados | Global | `DatosProcesados` |
+
+## Instalación y Despliegue
+
+### Pasos de Despliegue
+
+1. **Inicializar el proyecto:**
+   ```bash
+   npm init -y
    ```
 
-2. Reemplaza 'TU_CLAVE_API_GOOGLE_MAPS_AQUÍ' con tu clave de API de Google Maps.
-   - Puedes obtener una clave API desde la [Consola de Google Cloud](https://console.cloud.google.com/)
-   - Asegúrate de que la clave tenga acceso a la API de JavaScript de Maps
-   - Se recomienda restringir la clave por referencia HTTP para mayor seguridad
+2. **Instalar dependencias:**
+   ```bash
+   npm install webpack webpack-cli
+   ```
 
-3. El archivo `config.js` está excluido del control de versiones en `.gitignore` para evitar exponer tu clave API.
+3. **Crear webpack.config.js** (ya incluido en el proyecto)
 
-### 4. Procesar los datasets (opcional)
+4. **Ubicar código fuente:**
+   - HTML, CSS, JavaScript en `/src`
+   - Scripts adicionales en `/src/scripts`
+   - Manifest SOLO con `main.js` + librerías
 
-Si necesitas actualizar los datos procesados:
+5. **Compilar el proyecto:**
+   ```bash
+   npm run build
+   ```
+   *Ejecutar desde PowerShell abierto como Administrator*
 
-```bash
-cd src
-python 01_procesar_dataset.py
-```
+6. **Desplegar en Operations Hub:**
+   - Copiar archivos compilados a la ubicación de despliegue
+   - Configurar las variables globales y queries según la sección anterior
+   - Vincular el plugin Dashboard con la página
 
-Esto convertirá los datos del CSV a un formato JSON optimizado para su uso en el dashboard.
+## Variables de Entorno
 
-### 5. Ejecución local
+Crear un archivo `config.js` basado en `config_template.js` con:
 
-Para pruebas locales, puedes utilizar un servidor web ligero:
+- Credenciales de API
+- URLs de endpoints
+- Configuración de conexión a Operations Hub
 
-#### Python
-```bash
-# En Python 3
-python -m http.server
+## Notas Importantes
 
-# En Python 2
-python -m SimpleHTTPServer
-```
-
-Luego navega a `http://localhost:8000` en tu navegador.
-
-#### Node.js (alternativa)
-```bash
-# Instalar http-server si no lo tienes
-npm install -g http-server
-
-# Ejecutar el servidor
-http-server
-```
-
-### 6. Desplegar en AWS S3 u otro servicio de hosting
-
-#### Para Amazon S3:
-1. Crea un bucket en S3 configurado para alojamiento de sitios web estáticos
-2. Sube todos los archivos y directorios del proyecto (HTML, JS, CSS y el archivo `config.js`)
-3. Configura los permisos de acceso público según sea necesario
-4. Accede al dashboard a través de la URL del punto de enlace de sitio web de S3
-
-## Uso del Dashboard
-
-1. Abre la URL donde está alojado el dashboard en tu navegador
-2. El mapa mostrará automáticamente los puntos críticos de la red de gas
-3. Selecciona una fecha y hora específica utilizando el selector para consultar datos históricos o futuros
-4. El dashboard mostrará:
-   - Presión de entrada upstream y downstream
-   - Predicción de presión a 48 horas
-   - Variación esperada
-   - Comparación con mínimo contractual
-   - Tiempo restante hasta llegar al umbral
-5. Haz clic en los marcadores del mapa para obtener información detallada de cada ubicación
-
-## Uso del Chatbot
-
-El chatbot integrado permite realizar consultas en lenguaje natural sobre los datos de presión y predicciones.
-
-### Acceso al Chatbot:
-
-1. Desde el dashboard principal, haz clic en el botón "Consultar chatbot"
-2. Se abrirá una nueva interfaz con el chatbot
-3. Escribe tu consulta en lenguaje natural y presiona Enter o haz clic en "Enviar"
-
-### Ejemplos de consultas:
-
-- "¿Cuál es la presión actual en El Chourron?"
-- "¿Cuánto tiempo falta para llegar al mínimo contractual?"
-- "¿Cuál es la predicción de presión para mañana?"
-- "Muéstrame la variación de presión en las últimas 24 horas"
-
-El chatbot se conecta a un endpoint de AWS API Gateway que procesa las consultas y devuelve respuestas basadas en la fecha indicada.
-
-## Mantenimiento
-
-- Actualiza los datasets según sea necesario utilizando los scripts en la carpeta `src`
-- Para realizar actualizaciones en el dashboard o chatbot, modifica los archivos correspondientes y vuelve a subirlos al servicio de hosting
-- El endpoint del chatbot está administrado separadamente y no requiere mantenimiento por parte del usuario
-
-## Desarrollador
-
-Marcos Perez
-
-## Versión
-
-1.0.0 (Actualizado: 08/02/2026)
+- El script del plugin genera dinámicamente `StartTime`, `EndTime`, `StringURLs-Global` y demás variables
+- Los valores iniciales provistos previenen errores al cargar la página por primera vez
+- La variable `DatosProcesados` con scope APP permite compartir datos entre múltiples páginas de la aplicación
+- Se puede utilizar esta variable para: dashboards de resumen de puntos críticos o para automatizar el prompt del chatbot
