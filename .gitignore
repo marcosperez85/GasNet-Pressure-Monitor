@@ -1,5 +1,6 @@
 # Archivos de configuración locales y dependencias
 .venv
+config.js
 node_modules
 npm-debug.log
 yarn-error.log
