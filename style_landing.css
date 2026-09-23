@@ -1,18 +1,18 @@
 :root {
     /* Industrial dark color palette */
-    --primary-color: #ff8c00;
+    --primary-color: #328bff;
     --secondary-color: #2c3e50;
-    --background-color: #1e2128;
-    --card-background: #2a2e35;
+    --background-color: #1e2229;
+    --card-background: #282d35;
     --text-color: #e0e0e0;
-    --light-text: #a0a0a0;
+    --light-text: #aab2bf;
     --border-color: #3a3f48;
     --success-color: #4caf50;
     --warning-color: #ff9800;
     --danger-color: #f44336;
     --inactive-color: #616161;
-    --panel-background: #272b33;
-    --chart-line-1: #ff8c00;
+    --panel-background: #252a32;
+    --chart-line-1: #328bff;
     --chart-line-2: #4caf50;
     --chart-line-3: #f44336;
 
@@ -65,7 +65,9 @@ body {
     background-color: var(--panel-background);
     padding: 0.5rem 1.5rem;
     box-shadow: var(--shadow-sm);
-    height: 60px;
+    min-height: 64px;
+    gap: 16px;
+    flex-wrap: wrap;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 1rem;
 }
@@ -73,6 +75,8 @@ body {
 .navLeft {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 
 .logoContainer {
@@ -85,6 +89,7 @@ body {
     align-items: center;
     justify-content: center;
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .logoContainer i {
@@ -107,6 +112,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .navButton {
@@ -134,21 +140,20 @@ body {
 }
 
 .navButton:hover:not(.active) {
-    background-color: rgba(255, 140, 0, 0.2);
+    background-color: rgba(50, 139, 255, 0.2);
     color: var(--text-color);
 }
 
 /* Main Layout */
 #mainContent {
     display: flex;
-    margin: 0 1.5rem;
-    /* Ajuste para ocupar todo el alto disponible */
-    height: calc(100vh - 80px);
+    margin: 0 18px 18px;
 }
 
 /* Left Sidebar for Distribution Zones */
 .leftSidebar {
-    width: 280px;
+    width: clamp(240px, 20vw, 380px);
+    flex-shrink: 0;
     background-color: var(--panel-background);
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-sm);
@@ -161,7 +166,8 @@ body {
 
 /* Right Sidebar - moved from left */
 .rightSidebar {
-    width: 280px;
+    width: clamp(240px, 20vw, 380px);
+    flex-shrink: 0;
     background-color: var(--panel-background);
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-sm);
@@ -175,6 +181,7 @@ body {
 .sidebarHeader {
     padding: var(--spacing-md);
     border-bottom: 1px solid var(--border-color);
+    text-align: center;
 }
 
 .sidebarHeader h3 {
@@ -219,6 +226,8 @@ body {
 .distributionZones {
     display: flex;
     flex-direction: column;
+    padding: 12px;
+    gap: 8px;
 }
 
 .distributionButton {
@@ -227,12 +236,16 @@ body {
     align-items: center;
     padding: var(--spacing-md);
     cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: var(--card-background);
+    box-shadow: var(--shadow-sm);
+    gap: 8px;
     transition: background-color 0.2s;
 }
 
 .distributionButton:hover {
-    background-color: rgba(255, 140, 0, 0.1);
+    background-color: rgba(50, 139, 255, 0.1);
 }
 
 .zoneName {
@@ -241,8 +254,8 @@ body {
 
 .zoneSegments {
     display: none;
-    padding-left: var(--spacing-lg);
-    background-color: var(--card-background);
+    padding-left: 12px;
+    background-color: var(--panel-background);
 }
 
 .zoneSegments.active {
@@ -251,13 +264,16 @@ body {
 
 .zoneSegment {
     padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: var(--card-background);
+    margin-bottom: 8px;
     font-size: var(--font-size-sm);
     cursor: pointer;
 }
 
 .zoneSegment:hover {
-    background-color: rgba(255, 140, 0, 0.1);
+    background-color: rgba(50, 139, 255, 0.1);
     color: var(--primary-color);
 }
 
@@ -266,8 +282,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    /* Ocupar todo el alto del contenedor padre */
-    height: 100%;
+    min-width: 0;
 }
 
 .mapArea {
@@ -278,8 +293,7 @@ body {
     box-shadow: var(--shadow-sm);
     position: relative;
     border: 1px solid var(--border-color);
-    /* Ocupar todo el alto disponible */
-    height: 100%;
+    min-height: 400px;
 }
 
 /* Chart Panel Styles */
@@ -290,8 +304,6 @@ body {
     margin-top: 1rem;
     box-shadow: var(--shadow-sm);
     overflow: hidden;
-    /* Altura fija para el panel del gráfico */
-    height: 400px;
 }
 
 .chartHeader {
@@ -330,62 +342,15 @@ body {
 }
 
 .chartContainer {
-    height: 350px;
+    height: 340px;
     width: 100%;
-    padding: 0.25rem 0;
-    /* menos padding horizontal */
-    position: relative;
-}
-
-/* Estilos específicos para ECharts para mejorar el contraste */
-.chartContainer .echarts-tooltip {
-    background-color: rgba(42, 46, 53, 0.9) !important;
-    border: 1px solid var(--primary-color) !important;
-    color: var(--text-color) !important;
-}
-
-/* Estilos para los textos de ECharts */
-.chartContainer text {
-    fill: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* Aumentar el contraste de las líneas de la cuadrícula */
-.chartContainer .echarts-grid-line {
-    stroke: rgba(255, 255, 255, 0.1) !important;
-    stroke-dasharray: 4, 4 !important;
-    /* Líneas discontinuas */
-}
-
-/* Hacer más visibles los ejes */
-.chartContainer .echarts-axis-line,
-.chartContainer .echarts-axis-tick {
-    stroke: var(--light-text) !important;
-    stroke-width: 1 !important;
-}
-
-.chartContainer .echarts-legend {
-    background-color: rgba(42, 46, 53, 0.7) !important;
-    border-radius: 4px !important;
-    padding: 5px !important;
-}
-
-.chartContainer .echarts-legend-item-text {
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* Mejorar visualización de títulos */
-.chartContainer .echarts-title {
-    font-weight: 600 !important;
-    color: var(--text-color) !important;
+    padding: var(--spacing-sm);
 }
 
 /* Data Panel Styles */
 .segmentList {
-    display: flex;
-    flex-direction: column;
     flex: 1;
     overflow-y: auto;
-    
 }
 
 .segmentItem {
@@ -395,7 +360,7 @@ body {
 }
 
 .segmentItem:hover {
-    background-color: rgba(255, 140, 0, 0.1);
+    background-color: rgba(50, 139, 255, 0.1);
 }
 
 .segmentTitle {
@@ -455,16 +420,45 @@ body {
 /* Adding transition effect for smoother UX */
 .segmentItem {
     padding: var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    border-top: 3px solid var(--primary-color);
+    border-radius: var(--border-radius-md);
+    margin: 12px;
+    background: var(--card-background);
     transition: background-color 0.2s ease, opacity 0.3s ease;
 }
 
+.segmentItem.active {
+    background: #26364b;
+    border-color: var(--primary-color);
+    box-shadow: inset 3px 0 0 var(--primary-color);
+}
+
+.segmentItem[role="button"] {
+    cursor: pointer;
+}
+
+.segmentItem:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.zoneSegment.active {
+    color: var(--text-color);
+    background: #26364b;
+    border-color: var(--primary-color);
+}
+
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
+}
+
 /* Responsive design */
-@media screen and (max-width: 1400px) {
+@media screen and (max-width: 1100px) {
     #mainContent {
         flex-direction: column;
-        /* Permitir que crezca en pantallas pequeñas */
-        height: auto;
     }
 
     .leftSidebar,
@@ -476,8 +470,7 @@ body {
     }
 
     .distributionZones {
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: column;
     }
 
     .distributionButton {
@@ -491,6 +484,7 @@ body {
 
     .mapArea {
         height: 400px;
+        flex: none;
     }
 }
 
@@ -517,47 +511,19 @@ body {
         display: none;
     }
 
-    .chartContainer {
-        height: 300px;
-        /* Un poco más pequeño en móviles */
+    .chartHeader {
+        flex-direction: column;
+        align-items: flex-start;
     }
-}
 
-/* Para garantizar que los botones del chart tengan buen contraste */
-.chartButton {
-    padding: 4px 12px;
-    border: none;
-    background: var(--background-color);
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: var(--font-size-xs);
-    color: var(--light-text);
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
+    .chartControls {
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
 
-.chartButton:hover {
-    background-color: rgba(255, 140, 0, 0.3);
-    color: var(--text-color);
-}
-
-.chartButton.active {
-    background-color: var(--primary-color);
-    color: var(--panel-background);
-    font-weight: 600;
-}
-
-.chartHeader {
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.chartControls {
-    margin-top: 8px;
-}
-
-.distributionButton {
-    width: 100%;
+    .distributionButton {
+        width: 100%;
+    }
 }
 
 /* Keep compatibility with existing classes */

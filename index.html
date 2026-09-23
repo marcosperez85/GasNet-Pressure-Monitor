@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel='stylesheet' type='text/css' media='screen' href='./style_landing.css'>
+    <link rel="stylesheet" href="./chatbot/widget.css?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Agregar ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <title>GasNet Pressure Monitor</title>
+</head>
+
+<body>
+    <!-- Top navigation bar -->
+    <nav id="topNav">
+        <div class="navLeft">
+            <div class="logoContainer">
+                <i class="fas fa-gauge-high"></i>
+            </div>
+            <h1>Sistema de Monitoreo de Gasoductos</h1>
+        </div>
+        <div class="navRight">
+            <button class="navButton active"><i class="fas fa-map"></i> Map View</button>
+            <button class="navButton"><i class="fas fa-chart-line"></i> Dashboard</button>
+            <button class="navButton" id="openTecbot" aria-controls="tecbotWindow" aria-expanded="false"><i class="fas fa-robot"></i> Tecbot</button>
+            <button class="navButton"><i class="fas fa-cog"></i> Settings</button>
+        </div>
+    </nav>
+
+    <!-- Main content area with sidebars on BOTH sides -->
+    <div id="mainContent">
+        <!-- Left Sidebar for Distribution Zones -->
+        <div class="leftSidebar">
+            <div class="sidebarHeader">
+                <h3>Sistemas</h3>
+            </div>
+
+            <!-- Unidades de negocio siempre visibles -->
+            <div class="distributionZones">
+                <div class="zoneSegment">Bahía Blanca</div>
+                <div class="zoneSegment">Buenos Aires Centro</div>
+                <div class="zoneSegment">Buenos Aires Norte</div>
+                <div class="zoneSegment">Buenos Aires Sur</div>
+                <div class="zoneSegment">La Pampa</div>
+                <div class="zoneSegment">La Plata</div>
+                <div class="zoneSegment">Mar del Plata</div>
+                <div class="zoneSegment">Andina</div>
+                <div class="zoneSegment">Comodoro Rivadavia</div>
+                <div class="zoneSegment">De los Lagos</div>
+                <div class="zoneSegment">Del Comahue</div>
+                <div class="zoneSegment">Patagonia Norte</div>
+                <div class="zoneSegment">Península</div>
+                <div class="zoneSegment">Santa Cruz Sur</div>
+                <div class="zoneSegment">Tierra del Fuego</div>
+            </div>
+        </div>
+
+        <!-- Map content in center -->
+        <div class="mapContent">
+            <!-- Map area -->
+            <div id="map" class="mapArea"></div>
+
+            <!-- Trends chart section -->
+            <div class="chartPanel">
+                <div class="chartHeader">
+                    <h4>Tendencia de Presión</h4>
+                    <div class="chartControls">
+                        <button class="chartButton active" data-period="day">Día</button>
+                        <button class="chartButton" data-period="week">Semana</button>
+                        <button class="chartButton" data-period="month">Mes</button>
+                    </div>
+                </div>
+                <div id="trendChart" class="chartContainer"></div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar for Pipeline Segments -->
+        <div class="rightSidebar">
+            <div class="sidebarHeader">
+                <h3>Puntos de Medición</h3>
+                <div class="segmentCount">Sistema de Monitoreo de Presiones</div>
+            </div>
+
+            <!-- Initial message when no selection has been made -->
+            <div id="noSelectionMessage" class="noSelectionMessage">
+                <div class="messageIcon">
+                    <i class="fas fa-hand-pointer"></i>
+                </div>
+                <div class="messageText">
+                    Seleccione una Unidad de Negocio para ver los puntos de medición
+                </div>
+            </div>
+
+            <!-- List of pipeline segments (initially empty) -->
+            <div id="segmentList" class="segmentList hidden">
+                <!-- Segments will be added dynamically -->
+            </div>
+        </div>
+
+
+    </div>
+
+    <button id="tecbotLauncher" class="tecbotLauncher" type="button" aria-controls="tecbotWindow" aria-expanded="false">
+        <i class="fas fa-comment-dots" aria-hidden="true"></i> Tecbot
+    </button>
+    <section id="tecbotWindow" class="tecbotWindow" role="dialog" aria-labelledby="tecbotTitle" hidden>
+        <header class="tecbotHeader">
+            <h2 id="tecbotTitle">Tecbot</h2>
+            <button id="closeTecbot" type="button" aria-label="Cerrar Tecbot">×</button>
+        </header>
+        <p id="tecbotContext" class="tecbotContext">Consultas sobre las mediciones simuladas.</p>
+        <div id="tecbotMessages" class="tecbotMessages" role="log" aria-live="polite" aria-label="Conversación con Tecbot"></div>
+        <form id="tecbotForm" class="tecbotForm">
+            <label for="tecbotInput">Tu consulta</label>
+            <div class="tecbotInputRow">
+                <input id="tecbotInput" type="text" maxlength="4000" autocomplete="off" required placeholder="Consultá una presión o un punto…">
+                <button id="tecbotSend" type="submit">Enviar</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Cargar primero el archivo de configuración -->
+    <script src="./config.js"></script>
+
+    <!-- Después cargar el script principal que usa la configuración -->
+    <script src="./js/config-check.js"></script>
+    <script src="./js/state.js?v=tecbot-memory-1"></script>
+    <script src="./js/dom.js"></script>
+    <script src="./js/data.js"></script>
+    <script src="./js/sidebar.js?v=tecbot-memory-1"></script>
+    <script src="./js/chart.js?v=pressure-series-2"></script>
+    <script src="./js/map.js"></script>
+    <script src="./chatbot/chatbot.js?v=tecbot-memory-1"></script>
+    <script src="./js/navigation.js?v=tecbot-memory-1"></script>
+    <script src="./js/main.js?v=tecbot-memory-1"></script>
+</body>
+
+</html>

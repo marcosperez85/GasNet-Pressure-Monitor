@@ -1,4 +1,4 @@
-export const MEASUREMENT_POINTS = {
+const MEASUREMENT_POINTS = {
     // UNIDADES DE NEGOCIO Y PUNTOS DE MEDICIÓN DE DISTRIBUIDORA PAMPEANA
     'Bahía Blanca': [
         { title: 'Bahía Blanca', subtitle: 'Conexión regional'},
