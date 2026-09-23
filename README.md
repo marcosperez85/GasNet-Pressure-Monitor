@@ -29,7 +29,7 @@ GasNet-Pressure-Monitor/
 ├── README.md             # Documentación del proyecto
 ├── index.html            # Interfaz principal del dashboard
 ├── style_landing.css     # Estilos del dashboard
-├── config.js             # Configuración local de APIs (no versionada)
+├── config.js             # Configuración para desarrollo local (no se publica con Terraform)
 ├── config.template.js    # Plantilla de configuración
 ├── requirements.txt      # Listado heredado del procesamiento de datasets; sin uso actual
 ├── js/
@@ -56,6 +56,8 @@ GasNet-Pressure-Monitor/
 └── terraform/
     ├── main.tf           # Archivo principal de Terraform (actualmente vacío)
     ├── provider.tf       # Proveedores, región y perfil de AWS
+    ├── frontend.tf       # Bucket privado, CloudFront, proxy /chat y archivos estáticos
+    ├── terraform.tfvars.example # Plantilla de la clave de Google Maps
     ├── variables.tf      # Variables de infraestructura
     ├── outputs.tf        # Salidas del despliegue
     ├── api_gateway.tf    # API REST para acceder al chatbot
@@ -63,7 +65,9 @@ GasNet-Pressure-Monitor/
     ├── bedrock.tf        # Archivo reservado para Bedrock (actualmente vacío)
     ├── security.tf       # Clave de API, plan de uso, permisos IAM y backend de estado
     ├── .terraform.lock.hcl  # Versiones fijadas de los proveedores
-    └── lambda.zip        # Archivo ZIP presente en el repositorio
+    ├── lambda.zip        # Archivo ZIP presente en el repositorio
+    └── tests/
+        └── frontend.tftest.hcl # Pruebas con proveedores simulados (sin AWS)
 ```
 
 Se omiten del árbol los artefactos locales de Terraform, como `.terraform/`,
@@ -90,10 +94,9 @@ ejecutar el dashboard, el servidor HTTP o las pruebas actuales.
 
 ### Para el despliegue
 
-- Servicio de hosting de sitios estáticos (Amazon S3, GitHub Pages, Netlify, etc.)
-- API Key de Google Maps válida
-- URL y clave de API Gateway configuradas en `config.js`, con la Lambda actualizada para recibir el contexto.
-- Terraform y credenciales AWS con los permisos correspondientes si se despliega o actualiza el backend.
+- Cuenta AWS y perfil local `trabajo`, con permisos para S3, CloudFront y los recursos del backend.
+- Clave de Maps JavaScript API restringida por sitio web en Google Cloud.
+- Terraform y acceso al backend remoto de estado ya configurado. Las pruebas con proveedores simulados requieren Terraform 1.7 o posterior.
 
 ## Instalación
 
@@ -102,11 +105,20 @@ ejecutar el dashboard, el servidor HTTP o las pruebas actuales.
 La configuración de Terraform crea `POC-chatbot-api`, una Lambda `POC-chatbot` con el
 código de `lambda/chatbot`, y un rol IAM, API key y plan de uso propios.
 Conserva la región `us-east-1` y el perfil AWS `trabajo`.
+También administra el bucket privado `tecnet-dashboard`, la distribución de
+CloudFront y los objetos estáticos del dashboard. El nombre del bucket debe estar
+disponible globalmente; si ya existe en tu cuenta, debe importarse al state antes
+de administrarlo con esta configuración. No se intenta adoptar ni vaciar un bucket existente.
 
 El backend usa el bucket existente `terraform-state-mdp`, pero guarda el state
 en `POC-chatbot/terraform.tfstate`. El state original
 `bedrock-app/terraform.tfstate` no se debe copiar, migrar ni importar en la POC.
 La tabla de locks existente `terraform-lock` se comparte; no se recrea.
+
+Primero copia `terraform/terraform.tfvars.example` a `terraform/terraform.tfvars`
+y reemplaza el valor de `google_maps_api_key` por tu clave de Google Maps. El archivo
+`terraform.tfvars` está excluido de Git. También puedes proporcionar la variable
+de entorno `TF_VAR_google_maps_api_key` en lugar de crear ese archivo.
 
 Desde PowerShell, en la raíz del repositorio:
 
@@ -131,14 +143,25 @@ Después de revisar el plan, desplegar explícitamente:
 
 ```powershell
 terraform -chdir=terraform apply poc.tfplan
-terraform -chdir=terraform output -raw api_url
-terraform -chdir=terraform output -raw api_key
+terraform -chdir=terraform output -raw frontend_url
 ```
 
-Actualizar solamente `API_GATEWAY_URL` y `API_GATEWAY_KEY` en el `config.js`
-local con los outputs nuevos. Conservar `GOOGLE_MAPS_API_KEY`. No publicar
-la API key ni el archivo de plan en Git. El output de API key es sensible.
-Hasta actualizar la configuración, el frontend seguirá usando su API actual.
+`terraform plan` muestra lo que se creará o actualizará; **no despliega el sitio**.
+`terraform apply poc.tfplan` publica los cambios del plan revisado. CloudFront
+puede tardar varios minutos en distribuir su configuración.
+
+Usa el output `frontend_url` para abrir el sitio por HTTPS. En Google Cloud,
+autoriza `https://<dominio-del-output-frontend_url>/*` como referencia HTTP de la
+clave y limita su uso a Maps JavaScript API. Por ejemplo:
+`https://d123example.cloudfront.net/*`. Agrega `http://localhost:8000/*` solo a la
+clave que utilices para desarrollo local. Hasta aplicar las restricciones
+correctas, Google Maps puede rechazar la carga desde el dominio nuevo.
+
+Los outputs `api_url` y `api_key` siguen disponibles para desarrollo local.
+No copies la clave de API Gateway al `config.js` publicado. El state y los planes
+contienen valores sensibles: `sensitive = true` oculta la salida habitual de
+Terraform, pero no elimina esos valores del state ni de los planes guardados.
+Conserva el acceso restringido al bucket de estado y no publiques planes o tfvars.
 
 El logging de API Gateway utiliza la configuración regional de CloudWatch ya
 existente en la cuenta. Esta POC no administra ni reemplaza esa configuración
@@ -151,7 +174,7 @@ git clone https://github.com/[usuario]/GasNet-Pressure-Monitor.git
 cd GasNet-Pressure-Monitor
 ```
 
-### 2. Configuración de la API Key de Google Maps y URL del API Gateway
+### 2. Configuración para desarrollo local
 
 Por razones de seguridad, las claves de API no se incluyen en el control de versiones.
 
@@ -186,14 +209,61 @@ No abras `index.html` mediante `file://`: la carga del GeoJSON requiere servir
 el sitio por HTTP o HTTPS.
 
 
-### 4. Desplegar el frontend en AWS S3 u otro servicio de hosting
+### 4. Publicación del frontend con Terraform
 
-#### Para Amazon S3:
+El procedimiento de plan/apply indicado arriba publica una lista explícita de
+archivos definida en `local.frontend_files` de `terraform/frontend.tf`: HTML,
+estilos, scripts y el GeoJSON. Si agregas un nuevo recurso estático, inclúyelo
+en esa lista. Los cambios de contenido se detectan mediante hashes.
 
-1. Crea un bucket en S3 configurado para alojamiento de sitios web estáticos
-2. Publica `index.html`, `style_landing.css`, `config.js` y las carpetas `js/`, `chatbot/` y `data/`. Las carpetas `lambda/`, `terraform/` y `tests/` no forman parte del frontend.
-3. Configura los permisos de acceso público según sea necesario
-4. Accede al dashboard a través de la URL del punto de enlace de sitio web de S3
+El bucket `tecnet-dashboard` tiene el acceso público bloqueado. CloudFront lee
+los objetos mediante Origin Access Control (OAC), con una política limitada a
+esa distribución. No se habilita S3 Website Hosting: la entrada pública es
+CloudFront, con certificado HTTPS predeterminado y `index.html` como documento raíz.
+
+Los archivos del frontend se sirven con revalidación de caché y `config.js` con
+`no-store`; no hace falta ejecutar invalidaciones para cada cambio normal.
+El contenido de `/chat` no se almacena en caché. El despliegue de API Gateway
+se renueva cuando cambia su configuración, no por la fecha de cada plan.
+
+### Configuración pública y credenciales
+
+Terraform **no sube el `config.js` local**. Genera este formato en S3:
+
+```javascript
+const CONFIG = {
+  GOOGLE_MAPS_API_KEY: 'CLAVE_RESTRINGIDA_DE_MAPS',
+  API_GATEWAY_URL: '/chat'
+};
+```
+
+- **Google Maps:** la clave debe estar disponible en el navegador. Su protección
+  consiste en restringir dominios y APIs en Google Cloud, no en ocultarla en JavaScript.
+  [Guía de Google](https://developers.google.com/maps/api-security-best-practices).
+- **URL de API Gateway:** no es un secreto. El navegador usa `/chat` en el mismo
+  dominio; CloudFront lo reenvía a la etapa `/dev/chat` de la API administrada aquí.
+- **Clave de API Gateway:** queda configurada como cabecera de origen `x-api-key`
+  en CloudFront. Se agrega al reenviar la solicitud, sin enviarla al navegador.
+  Se conserva en Terraform/state y es visible para administradores con permisos
+  sobre CloudFront. [Cabeceras de origen de CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html).
+- **Credenciales AWS:** se obtienen del perfil `trabajo`; nunca forman parte del frontend.
+
+El sitio y `/chat` siguen siendo públicos: ocultar la clave de origen no autentica
+usuarios. Las API keys de API Gateway controlan uso, no sustituyen autorización.
+Si el chatbot debe ser privado, hace falta añadir autenticación/autorización
+(por ejemplo, Cognito y un authorizer). [Guía de API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html).
+
+Validación local de la infraestructura, sin desplegar recursos en AWS, después de
+inicializar los proveedores y definir `TF_DATA_DIR` como se indicó arriba:
+
+```powershell
+terraform -chdir=terraform fmt -check -recursive
+terraform -chdir=terraform validate
+terraform -chdir=terraform test
+```
+
+Las pruebas usan proveedores simulados y un estado de prueba separado; su
+`command = apply` no aplica cambios sobre tu cuenta de AWS.
 
 ## Uso del Dashboard
 
@@ -268,6 +338,6 @@ deben contrastarse con los datos del gráfico.
 ## Mantenimiento
 
 - Actualiza `js/data.js` para modificar las unidades, puntos y códigos asociados al GeoJSON.
-- Publica los cambios de HTML, JavaScript y CSS en el hosting del frontend.
+- Publica cambios de HTML, JavaScript, CSS y GeoJSON mediante `terraform plan` y `terraform apply`.
 - Si modificas el contexto o el contrato de la API, actualiza también `lambda/chatbot/lambda_function.py` y despliega el backend con Terraform.
 - Ejecuta las pruebas del backend antes de desplegar cambios en la validación o el envío del contexto a Bedrock.
