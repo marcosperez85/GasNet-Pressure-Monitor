@@ -117,7 +117,48 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
   triggers = {
-    redeployment = timestamp()
+    # No serializar recursos completos: incluyen atributos calculados por AWS
+    # (por ejemplo cache_namespace) que pueden cambiar entre plan y apply.
+    redeployment = sha1(jsonencode({
+      path = aws_api_gateway_resource.chat.path_part
+      post = {
+        method           = aws_api_gateway_method.post.http_method
+        authorization    = aws_api_gateway_method.post.authorization
+        api_key_required = aws_api_gateway_method.post.api_key_required
+        integration = {
+          method = aws_api_gateway_integration.lambda.integration_http_method
+          type   = aws_api_gateway_integration.lambda.type
+          uri    = aws_api_gateway_integration.lambda.uri
+        }
+      }
+      options = {
+        method        = aws_api_gateway_method.options.http_method
+        authorization = aws_api_gateway_method.options.authorization
+        integration = {
+          type              = aws_api_gateway_integration.options.type
+          request_templates = aws_api_gateway_integration.options.request_templates
+        }
+        method_response = {
+          status_code = aws_api_gateway_method_response.options.status_code
+          parameters  = aws_api_gateway_method_response.options.response_parameters
+        }
+        integration_response = {
+          status_code = aws_api_gateway_integration_response.options.status_code
+          parameters  = aws_api_gateway_integration_response.options.response_parameters
+          templates   = aws_api_gateway_integration_response.options.response_templates
+        }
+      }
+      gateway_responses = {
+        default_4xx = {
+          type       = aws_api_gateway_gateway_response.default_4xx.response_type
+          parameters = aws_api_gateway_gateway_response.default_4xx.response_parameters
+        }
+        default_5xx = {
+          type       = aws_api_gateway_gateway_response.default_5xx.response_type
+          parameters = aws_api_gateway_gateway_response.default_5xx.response_parameters
+        }
+      }
+    }))
   }
 
   lifecycle {
