@@ -246,8 +246,7 @@ incluye la selección actual; no se envía el historial de mensajes del chat.
 
 **Despliegue:** además de publicar el frontend actualizado, hay que desplegar
 `lambda/chatbot/lambda_function.py` siguiendo el procedimiento de Terraform de esta
-documentación. La versión anterior de Lambda ignoraba el contexto. Estos cambios
-de código no despliegan automáticamente recursos en AWS ni prueban una inferencia real.
+documentación. Estos cambios de código no despliegan automáticamente recursos en AWS ni prueban una inferencia real.
 
 Pruebas del backend sin invocar AWS:
 
