@@ -94,10 +94,13 @@ async function sendMessage() {
     try {
         const base = CONFIG.API_GATEWAY_URL.replace(/\/+$/, '');
         const endpoint = base.endsWith('/chat') ? base : base + '/chat';
+        const headers = { 'Content-Type': 'application/json' };
+        // En CloudFront la clave se agrega en el origen; solo se usa aquí en desarrollo local.
+        if (CONFIG.API_GATEWAY_KEY) headers['x-api-key'] = CONFIG.API_GATEWAY_KEY;
         // El contexto solo vive en memoria y en esta solicitud; no se persiste.
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': CONFIG.API_GATEWAY_KEY },
+            headers,
             body: JSON.stringify({ query, measurementContext: buildMeasurementContext() }),
             signal: controller.signal
         });
