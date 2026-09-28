@@ -29,8 +29,8 @@ function updateChatbotSelection() {
     if (!label) return;
     const point = AppState.selectedMeasurementPoint;
     label.textContent = point
-        ? 'Punto seleccionado: ' + point.title + (point.id ? ' (' + point.id + ')' : '') + '. Datos simulados.'
-        : 'Sin punto seleccionado. Podés consultar por nombre, unidad o código. Datos simulados.';
+        ? 'Punto seleccionado: ' + point.title + (point.id ? ' (' + point.id + ')' : '') + '.'
+        : 'Sin punto seleccionado. Podés consultar por nombre, unidad o código.';
 }
 
 function buildMeasurementContext() {
@@ -93,6 +93,7 @@ async function sendMessage() {
     tecbotSending = true;
     const send = document.getElementById('tecbotSend');
     send.disabled = true;
+    setQuickPromptsDisabled(true);
     input.value = '';
     appendChatMessage('user', 'Vos', query);
     const loading = appendChatMessage('loading', 'Tecbot', 'Consultando las mediciones…');
@@ -123,6 +124,7 @@ async function sendMessage() {
         loading.remove();
         send.disabled = false;
         tecbotSending = false;
+        setQuickPromptsDisabled(false);
     }
 }
 
@@ -143,6 +145,13 @@ function appendIncidentLinks(incidents) {
 }
 
 function setupChatbot() {
+    document.querySelectorAll('[data-tecbot-prompt]').forEach(button => {
+        button.addEventListener('click', () => {
+            if (tecbotSending) return;
+            document.getElementById('tecbotInput').value = button.dataset.tecbotPrompt;
+            sendMessage();
+        });
+    });
     document.getElementById('tecbotLauncher').addEventListener('click', openChatbot);
     document.getElementById('closeTecbot').addEventListener('click', closeChatbot);
     document.getElementById('tecbotWindow').addEventListener('keydown', event => {
@@ -152,7 +161,11 @@ function setupChatbot() {
         event.preventDefault();
         sendMessage();
     });
-    appendChatMessage('bot', 'Tecbot', 'Podés consultarme las presiones simuladas del mapa. Seleccioná un punto o indicá su nombre o código en tu pregunta.');
+    appendChatMessage('bot', 'Tecbot', 'Podés consultar el estado, las alarmas y la evolución de presión, o generar un reporte. Usá los accesos rápidos o escribí tu pregunta.');
     updateChatbotSelection();
     if (window.location.hash === '#tecbot') openChatbot();
+}
+
+function setQuickPromptsDisabled(disabled) {
+    document.querySelectorAll('[data-tecbot-prompt]').forEach(button => { button.disabled = disabled; });
 }
