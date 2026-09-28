@@ -49,3 +49,8 @@
     .tecbotWindow, .tecbotLauncher { right: 12px; bottom: 12px; }
     .tecbotWindow { height: min(480px, calc(100dvh - 24px)); }
 }
+.tecbotMessage a {
+    color: #7dd3fc;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+}
