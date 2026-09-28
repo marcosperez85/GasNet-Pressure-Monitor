@@ -114,7 +114,13 @@
             <h2 id="tecbotTitle">Tecbot</h2>
             <button id="closeTecbot" type="button" aria-label="Cerrar Tecbot">×</button>
         </header>
-        <p id="tecbotContext" class="tecbotContext">Consultas sobre las mediciones simuladas.</p>
+        <p id="tecbotContext" class="tecbotContext">Consultas sobre los puntos de medición.</p>
+        <div class="tecbotQuickPrompts" role="group" aria-label="Consultas rápidas">
+            <button type="button" data-tecbot-prompt="¿Qué está sucediendo en el sistema? Consultá el estado de los puntos de medición.">Estado del sistema</button>
+            <button type="button" data-tecbot-prompt="¿Qué alarmas activas hay en el sistema?">Alarmas activas</button>
+            <button type="button" data-tecbot-prompt="¿Cómo evolucionó la presión downstream del punto seleccionado durante la última hora?">Última hora</button>
+            <button type="button" data-tecbot-prompt="Generá un reporte del incidente del punto seleccionado.">Generar reporte</button>
+        </div>
         <div id="tecbotMessages" class="tecbotMessages" role="log" aria-live="polite" aria-label="Conversación con Tecbot"></div>
         <form id="tecbotForm" class="tecbotForm">
             <label for="tecbotInput">Tu consulta</label>
