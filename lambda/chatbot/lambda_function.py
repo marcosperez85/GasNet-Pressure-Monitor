@@ -91,7 +91,7 @@ def lambda_handler(event, context):
         service = ToolService(repository, os.environ['INCIDENT_TEMPLATE_KEY'], os.environ['INCIDENTS_PREFIX'],
                               request_id, report_requested(query), selected, previous)
         operation = 'Bedrock'
-        text = run_agent(query, service, history, state.get('timezone', 'UTC'))
+        text = run_agent(query, service, history, 'UTC')
         return response(200, {'response': text, 'incidents': service.incidents,
                               'conversationAssetKey': service.last_asset})
     except StateError as error:
