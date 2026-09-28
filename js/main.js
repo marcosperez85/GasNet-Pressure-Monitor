@@ -6,5 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPressureScenario();
     initChart();
     loadMap();
+    setupSharedSimulation();
 
 });
