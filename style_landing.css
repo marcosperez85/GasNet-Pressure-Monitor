@@ -341,6 +341,23 @@ body {
     color: var(--panel-background);
 }
 
+.scenarioControls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 var(--spacing-md) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    color: var(--light-text);
+}
+
+.scenarioControls button { cursor: pointer; }
+.scenarioControls button:disabled { opacity: 0.5; cursor: default; }
+.scenarioControls button[aria-pressed="true"] {
+    color: #ffbd75;
+    border: 1px solid #ffbd75;
+}
+
 .chartContainer {
     height: 340px;
     width: 100%;

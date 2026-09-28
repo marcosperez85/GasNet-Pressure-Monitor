@@ -4,6 +4,7 @@ const AppState = {
     minimoContractual: 34,
     trendChart: null,
     pointChartData: new WeakMap(),
+    normalDownstream: new WeakMap(),
     measurementContext: null,
     simulationTime: Date.now(),
     selectedMeasurementPoint: null,
