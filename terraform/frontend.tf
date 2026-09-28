@@ -4,7 +4,7 @@ locals {
   frontend_files = toset([
     "index.html", "style_landing.css", "data/Gasoductos_y_ramales_CGP_05per.json",
     "js/state.js", "js/dom.js", "js/data.js", "js/config-check.js", "js/main.js",
-    "js/map.js", "js/sidebar.js", "js/chart.js", "js/navigation.js", "js/calcularLinepack.js",
+    "js/map.js", "js/sidebar.js", "js/chart.js", "js/navigation.js", "js/calcularLinepack.js", "js/simulation-api.js",
     "chatbot/chatbot.js", "chatbot/widget.css", "chatbot/index.html"
   ])
   content_types = {
@@ -175,7 +175,8 @@ resource "aws_s3_bucket_policy" "frontend" {
       Effect    = "Allow"
       Principal = { Service = "cloudfront.amazonaws.com" }
       Action    = "s3:GetObject"
-      Resource  = "${aws_s3_bucket.frontend.arn}/*"
+      # S3 state, templates and reports must not be reachable through CloudFront.
+      Resource  = [for key in setunion(local.frontend_files, toset(["config.js"])) : "${aws_s3_bucket.frontend.arn}/${key}"]
       Condition = { StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn } }
     }]
   })
