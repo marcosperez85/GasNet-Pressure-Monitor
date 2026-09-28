@@ -33,39 +33,38 @@ function updatePressureScenarioControl() {
     const status = document.getElementById('pressureScenarioStatus');
     const point = AppState.selectedMeasurementPoint;
     const active = Boolean(point && AppState.normalDownstream.has(point));
-    button.disabled = !point || !Number.isFinite(AppState.minimoContractual) || AppState.minimoContractual <= 0;
+    button.disabled = !point || !AppState.sharedStateReady || AppState.sharedStateBusy;
     button.setAttribute('aria-pressed', String(active));
     button.textContent = active ? 'Restaurar escenario normal' : 'Escenario caída de presión';
-    status.textContent = !point ? 'Seleccioná un punto para simular una caída.'
-        : active ? `Caída de presión activa en ${point.title}: downstream termina por debajo del mínimo contractual.` : '';
+    status.textContent = AppState.sharedStateError || (AppState.sharedStateBusy ? 'Guardando escenario compartido…'
+        : !AppState.sharedStateReady ? 'Sincronizando la simulación con S3…'
+        : !point ? 'Seleccioná un punto para simular una caída.'
+        : active ? `Caída de presión activa en ${point.title}: downstream termina por debajo del mínimo contractual.` : 'Escenario compartido sincronizado.');
 }
 
-function togglePressureDropScenario() {
+async function togglePressureDropScenario() {
     const point = AppState.selectedMeasurementPoint;
-    const minimum = AppState.minimoContractual;
-    if (!point || !Number.isFinite(minimum) || minimum <= 0) return;
-    const data = getMeasurementData(point);
-    if (AppState.normalDownstream.has(point)) {
-        // Restaurar exactamente la serie original, sin nuevos valores aleatorios.
-        data.down = AppState.normalDownstream.get(point);
-        AppState.normalDownstream.delete(point);
-    } else {
-        if (data.down.length < 2) return;
-        const original = data.down;
-        const samples = Math.min(6, original.length - 1);
-        const start = original.length - samples;
-        const initialPressure = original[start - 1][1];
-        const finalPressure = minimum * 0.8;
-        AppState.normalDownstream.set(point, original);
-        data.down = original.map(([time, pressure], index) => {
-            if (index < start) return [time, pressure];
-            const progress = (index - start + 1) / samples;
-            return [time, initialPressure + (finalPressure - initialPressure) * progress];
+    if (!point || !AppState.sharedStateReady || AppState.sharedStateBusy) return;
+    AppState.sharedStateBusy = true;
+    AppState.sharedStateError = '';
+    updatePressureScenarioControl();
+    try {
+        // Finish an older refresh before writing so it cannot repaint stale data later.
+        if (simulationSync) await simulationSync;
+        const result = await dashboardRequest({
+            action: 'set_scenario', assetKey: measurementKey(point),
+            active: !AppState.normalDownstream.has(point), version: AppState.sharedStateVersion
         });
+        applySharedSimulation(result.state);
+    } catch (error) {
+        // A timeout may happen after a successful write. Read S3 before retrying.
+        AppState.sharedStateBusy = false;
+        try { await syncSharedSimulation(); } catch (_) { /* Error is shown by synchronization. */ }
+        AppState.sharedStateError = error.message;
+    } finally {
+        AppState.sharedStateBusy = false;
+        updatePressureScenarioControl();
     }
-    // El gráfico, Line Pack y las futuras consultas comparten esta misma serie.
-    AppState.measurementContext = null;
-    selectMeasurementPoint(point);
 }
 
 function setupPressureScenario() {
