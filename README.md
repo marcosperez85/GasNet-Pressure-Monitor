@@ -315,6 +315,18 @@ gasoducto se encuentran en `properties.name`.
 
 ## Uso del Chatbot
 
+Antes de consultar Tecbot, también puedes activar una anomalía con el botón
+**Escenario caída de presión**, ubicado debajo del gráfico. Requiere seleccionar
+un punto y modifica solo su downstream: las últimas seis muestras horarias caen
+progresivamente hasta el 80 % de `AppState.minimoContractual`. Las fechas, upstream
+y las series de los demás puntos se conservan.
+
+El botón pasa a **Restaurar escenario normal** y recupera los valores originales
+sin generar otros aleatorios. Cada punto conserva su escenario al cambiar de
+selección durante la sesión. El gráfico y Line Pack se actualizan; Pressure sigue
+mostrando upstream. Las consultas posteriores de Tecbot reciben las presiones
+modificadas. Al recargar la página se descartan los escenarios de la sesión.
+
 El chatbot se muestra como una ventana en la esquina inferior derecha del dashboard.
 El mapa permanece visible e interactivo; abrir o cerrar el chat no navega a otro
 documento ni reinicia la selección, las curvas o la conversación.
