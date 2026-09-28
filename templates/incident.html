@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>Incidente $incident_id — DRAFT</title>
+  <style>
+    body { font: 16px/1.6 system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 1rem; color: #172033; }
+    h1, h2 { color: #164e63; } dt { font-weight: bold; } dd { margin-bottom: .5rem; }
+    .status { padding: 1rem; background: #fef3c7; } pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f1f5f9; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Reporte $incident_id</h1>
+  <p class="status">Estado: <strong>$status</strong> — borrador ficticio pendiente de revisión o aprobación humana.</p>
+  <dl>
+    <dt>Fecha de creación (UTC)</dt><dd>$created_at</dd>
+    <dt>Punto de medición</dt><dd>$asset ($asset_id) — $unit</dd>
+    <dt>Alarma</dt><dd>$alarm</dd>
+    <dt>Severidad</dt><dd>$severity</dd>
+    <dt>Presión downstream actual / normal</dt><dd>$current_pressure / $expected_pressure</dd>
+    <dt>Desviación respecto del escenario normal</dt><dd>$deviation</dd>
+  </dl>
+  <h2>Descripción</h2><p>$description</p>
+  <h2>Evidencia simulada</h2><pre>$evidence</pre>
+  <h2>Recomendaciones para revisión</h2><p>$recommendations</p>
+  <p>Este documento no aprueba incidentes ni ejecuta acciones sobre equipos industriales.</p>
+</body>
+</html>
