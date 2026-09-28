@@ -4,7 +4,7 @@ locals {
   frontend_files = toset([
     "index.html", "style_landing.css", "data/Gasoductos_y_ramales_CGP_05per.json",
     "js/state.js", "js/dom.js", "js/data.js", "js/config-check.js", "js/main.js",
-    "js/map.js", "js/sidebar.js", "js/chart.js", "js/navigation.js",
+    "js/map.js", "js/sidebar.js", "js/chart.js", "js/navigation.js", "js/calcularLinepack.js",
     "chatbot/chatbot.js", "chatbot/widget.css", "chatbot/index.html"
   ])
   content_types = {
