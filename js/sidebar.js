@@ -1,6 +1,7 @@
 function createSegmentItem(point) {
     const data = getMeasurementData(point);
     const pressure = data.up[data.up.length - 1][1];
+    const linepack = calcularLinepackActual(point, data);
     const item = document.createElement('div');
     item.className = 'segmentItem';
     item.tabIndex = 0;
@@ -20,7 +21,7 @@ function createSegmentItem(point) {
         <div class="segmentMetrics">
             <div>
                 <div class="metricLabel">Line Pack</div>
-                <div class="metricValue">${point.linepack}</div>
+                <div class="metricValue" title="${linepack === null ? 'Faltan parámetros físicos o presiones válidas del mismo instante' : 'Calculado con la presión media upstream/downstream; sin conversión de unidades'}">${linepack === null ? '—' : linepack.toFixed(2)}</div>
             </div>
             <div>
                 <div class="metricLabel">Pressure</div>
