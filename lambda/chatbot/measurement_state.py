@@ -168,7 +168,7 @@ class MeasurementRepository:
         validate_measurement_context(seed)
         state = {k: copy.deepcopy(seed[k]) for k in ('source', 'generatedAt', 'timestamps', 'points')}
         state.update(schemaVersion=1, version=str(uuid.uuid4()), updatedAt=utc_now(),
-                     timezone=seed.get('timezone', 'UTC'))
+                     timezone='UTC')
         state['points'] = [
             {**{k: p.get(k) for k in ('key', 'unit', 'id', 'title', 'nombres', 'up', 'down', 'min')},
              'normalDown': p['down'][:], 'scenario': 'normal', 'scenarioStartedAt': None}
