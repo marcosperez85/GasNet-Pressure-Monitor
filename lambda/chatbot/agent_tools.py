@@ -1,8 +1,8 @@
 """Read-only simulation tools and an explicitly requested DRAFT report."""
 import hashlib
 import html
-import json
 import re
+from datetime import datetime, timezone
 from string import Template
 
 from botocore.exceptions import ClientError
@@ -118,14 +118,25 @@ class ToolService:
         template_response = self.repository.s3.get_object(Bucket=self.repository.bucket, Key=self.template_key)
         template = Template(template_response['Body'].read().decode('utf-8'))
         alarm = alarms[0]
+        def readable_date(value):
+            return datetime.fromisoformat(value.replace('Z', '+00:00')).astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M UTC')
+
         values = {
-            'incident_id': incident_id, 'created_at': utc_now(), 'asset': point['title'],
-            'asset_id': status['asset_id'], 'unit': point['unit'], 'alarm': alarm['message'],
+            'incident_id': incident_id, 'created_at': readable_date(utc_now()), 'asset': point['title'],
+            'asset_id': point.get('id') or 'Sin código asignado', 'unit': point['unit'], 'alarm': alarm['message'],
             'current_pressure': f"{status['current_pressure']:.2f}",
             'expected_pressure': f"{status['expected_pressure']:.2f}",
-            'deviation': f"{status['deviation_percent']:.2f}%", 'severity': alarm['severity'],
+            'deviation': f"{status['deviation_percent']:.2f}%", 'severity': 'Alta' if alarm['severity'] == 'HIGH' else alarm['severity'],
             'description': 'Caída simulada de presión downstream por debajo del mínimo contractual.',
-            'evidence': json.dumps({'status': status, 'alarm': alarm}, ensure_ascii=False, indent=2),
+            'evidence': (
+                f"En la medición del {readable_date(status['timestamp'])}, la presión de entrada (upstream) "
+                f"fue {status['upstream_pressure']:.2f} y la presión de salida (downstream) "
+                f"fue {status['current_pressure']:.2f}, por debajo del mínimo contractual "
+                f"de {status['contractual_minimum']:.2f}. La alarma permanece activa desde "
+                f"el {readable_date(alarm['timestamp'])}. "
+                f"El valor normal de referencia es {status['expected_pressure']:.2f}; "
+                f"la variación respecto de ese valor es {status['deviation_percent']:.2f} %."
+            ),
             'recommendations': 'Revisar las series y el mínimo contractual. Validar la evidencia con un responsable. '
                                'Este borrador ficticio no autoriza maniobras ni acciones sobre equipos.',
             'status': 'DRAFT',
