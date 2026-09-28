@@ -41,6 +41,7 @@ GasNet-Pressure-Monitor/
 │   ├── map.js            # Carga del GeoJSON y selección de tramos en Google Maps
 │   ├── sidebar.js        # Tarjetas, métricas y selección de puntos de medición
 │   ├── chart.js          # Series simuladas y gráficos ECharts con DataZoom
+│   ├── calcularLinepack.js # Line Pack con presión media y parámetros físicos del punto
 │   └── navigation.js     # Apertura del chatbot flotante
 ├── data/
 │   └── Gasoductos_y_ramales_CGP_05per.json  # Tramos en GeoJSON, convertido desde KMZ
@@ -211,6 +212,26 @@ el sitio por HTTP o HTTPS.
 
 ### 4. Publicación del frontend con Terraform
 
+Desde Bash, situado en la raíz de `GasNet-Pressure-Monitor`, y con la clave de Google
+Maps configurada en `terraform/terraform.tfvars` (o `TF_VAR_google_maps_api_key`):
+
+```bash
+export AWS_PROFILE=trabajo
+export TF_DATA_DIR="$PWD/terraform/.terraform-poc"
+export TF_WORKSPACE=default
+
+terraform -chdir=terraform init -reconfigure
+terraform -chdir=terraform validate
+terraform -chdir=terraform plan -out=poc.tfplan
+
+# Revisar el plan antes de aplicar.
+terraform -chdir=terraform apply poc.tfplan
+terraform -chdir=terraform output -raw frontend_url
+```
+
+Genera un plan nuevo después de modificar archivos; no reutilices un plan anterior.
+El script `js/calcularLinepack.js` está incluido en la lista de publicación.
+
 El procedimiento de plan/apply indicado arriba publica una lista explícita de
 archivos definida en `local.frontend_files` de `terraform/frontend.tf`: HTML,
 estilos, scripts y el GeoJSON. Si agregas un nuevo recurso estático, inclúyelo
@@ -266,6 +287,20 @@ Las pruebas usan proveedores simulados y un estado de prueba separado; su
 `command = apply` no aplica cambios sobre tu cuenta de AWS.
 
 ## Uso del Dashboard
+
+El campo **Line Pack** de cada tarjeta se calcula en `js/calcularLinepack.js`:
+
+```text
+P = (última presión upstream + última presión downstream) / 2
+A = π × D² / 4
+Line Pack = (P × A × L) / (Z × R × T)
+```
+
+Las dos presiones deben corresponder al mismo instante. `D`, `L`, `Z`, `R` y `T`
+provienen de `point.config` en `js/data.js`. Se utilizan las unidades de los datos
+sin conversiones y el resultado se muestra con dos decimales. Si faltan parámetros
+o las mediciones no son válidas, la tarjeta muestra `—`. Actualmente solo los
+cuatro puntos de Mar del Plata tienen configuración física completa.
 
 1. Abre la URL del dashboard. El mapa carga los tramos del GeoJSON.
 2. Selecciona una unidad de negocio en la barra izquierda para mostrar sus puntos; se selecciona inicialmente el primero.
