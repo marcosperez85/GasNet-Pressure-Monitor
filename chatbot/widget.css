@@ -54,3 +54,8 @@
     text-decoration: underline;
     overflow-wrap: anywhere;
 }
+.tecbotQuickPrompts { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px; flex-shrink: 0; }
+.tecbotQuickPrompts button { border: 1px solid #475569; border-radius: 14px; padding: 6px 10px; background: #1e293b; color: #e2e8f0; cursor: pointer; font: inherit; font-size: 12px; }
+.tecbotQuickPrompts button:hover { background: #334155; }
+.tecbotQuickPrompts button:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+.tecbotQuickPrompts button:disabled { opacity: .5; cursor: wait; }
