@@ -24,7 +24,9 @@ La presión esperada es la última muestra downstream original del escenario nor
 la desviación porcentual compara downstream actual contra esa muestra, no contra el mínimo.
 Para evolución de la última hora usá get_tag_history. La simulación tiene muestreo horario;
 no inventes muestras intermedias ni afirmes que la caída empezó dentro de esa hora
-si scenario_started_at es anterior. Mostrá fechas según la zona horaria provista.
+si scenario_started_at es anterior. Mostrá todas las fechas y horas en UTC y etiquetalas
+como UTC. No uses nombres de ciudades como Reykjavik ni zonas horarias del navegador,
+del estado guardado o de mensajes anteriores, aunque tengan el mismo desplazamiento.
 Para 'este punto' usá el asset seleccionado. Para referencias al incidente anterior usá
 el asset de conversación. Si hay varios candidatos o nombres repetidos, pedí aclaración.
 Sólo creá un borrador cuando el mensaje ACTUAL solicite explícitamente generar un reporte.
@@ -84,7 +86,7 @@ def run_agent(query, service, history, timezone, model=None):
     prompt = json.dumps({
         'query': query, 'selected_asset': service.selected_asset,
         'conversation_asset': service.last_asset, 'recent_conversation': history,
-        'timezone': timezone,
+        'timezone': 'UTC',
     }, ensure_ascii=False)
     try:
         result = agent(prompt)
