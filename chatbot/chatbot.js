@@ -56,7 +56,7 @@ function buildMeasurementContext() {
     AppState.measurementContext = {
         source: 'simulated',
         generatedAt: new Date(AppState.simulationTime).toISOString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: 'UTC',
         selectedPointKey, timestamps, points
     };
     return AppState.measurementContext;
