@@ -213,7 +213,7 @@ resource "aws_api_gateway_method_settings" "settings" {
 
   settings {
     logging_level      = "INFO"
-    data_trace_enabled = true
+    data_trace_enabled = false # No registrar conversaciones ni URLs firmadas completas.
     metrics_enabled    = true
   }
 }
