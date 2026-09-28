@@ -7,7 +7,7 @@ import uuid
 
 import boto3
 from botocore.config import Config
-from botocore.exceptions import BotoCoreError, ClientError
+from botocore.exceptions import BotoCoreError, ClientError, ReadTimeoutError, ConnectTimeoutError
 
 from agent_tools import ToolService, report_requested
 from chat_agent import AgentBudgetExceeded, run_agent
@@ -44,6 +44,7 @@ def validate_history(history):
 
 def lambda_handler(event, context):
     service = None
+    operation = 'S3'
     try:
         if event.get('httpMethod') == 'OPTIONS':
             return response(200, {})
@@ -89,6 +90,7 @@ def lambda_handler(event, context):
             raise ValueError('El punto seleccionado o de la conversación no existe.')
         service = ToolService(repository, os.environ['INCIDENT_TEMPLATE_KEY'], os.environ['INCIDENTS_PREFIX'],
                               request_id, report_requested(query), selected, previous)
+        operation = 'Bedrock'
         text = run_agent(query, service, history, state.get('timezone', 'UTC'))
         return response(200, {'response': text, 'incidents': service.incidents,
                               'conversationAssetKey': service.last_asset})
@@ -96,17 +98,33 @@ def lambda_handler(event, context):
         return response(error.status, {'error': str(error)})
     except (ValueError, TypeError, UnicodeError) as error:
         return response(400, {'error': str(error)})
-    except (ClientError, BotoCoreError, AgentBudgetExceeded):
+    except (ClientError, BotoCoreError, AgentBudgetExceeded) as error:
         logger.exception('Error al consultar S3/Bedrock o límite de ejecución del agente')
-        return failed_agent_response(service)
-    except Exception:
+        return failed_agent_response(service, error, operation)
+    except Exception as error:
         logger.exception('Error interno del chatbot')
-        return failed_agent_response(service)
+        return failed_agent_response(service, error, operation)
 
 
-def failed_agent_response(service):
+def failed_agent_response(service, error=None, operation='S3 o Bedrock'):
     if service and service.incidents:
         return response(200, {'response': 'El borrador se guardó en estado DRAFT, pendiente de revisión humana. '
                               'No se pudo completar el resumen del agente.', 'incidents': service.incidents,
                               'conversationAssetKey': service.last_asset})
-    return response(503, {'error': 'No se pudo completar la operación con S3 o Bedrock. Intentá nuevamente.'})
+    # Strands can wrap the original AWS exception in EventLoopException.
+    root = error
+    seen = set()
+    while root is not None and root.__cause__ is not None and id(root) not in seen:
+        seen.add(id(root))
+        root = root.__cause__
+    if isinstance(root, AgentBudgetExceeded):
+        return response(503, {'error': 'La consulta necesitó más pasos de los disponibles. Probá uno de los accesos rápidos o consultá un punto específico.', 'code': 'AGENT_BUDGET_EXCEEDED'})
+    if isinstance(root, (ReadTimeoutError, ConnectTimeoutError)):
+        return response(503, {'error': f'{operation} tardó demasiado en responder. Intentá nuevamente.', 'code': 'UPSTREAM_TIMEOUT'})
+    if isinstance(root, ClientError):
+        code = root.response.get('Error', {}).get('Code', '')
+        if code in ('ThrottlingException', 'TooManyRequestsException', 'SlowDown'):
+            return response(503, {'error': 'El servicio está recibiendo demasiadas solicitudes. Esperá unos segundos y volvé a intentar.', 'code': 'UPSTREAM_THROTTLED'})
+        if code in ('AccessDenied', 'AccessDeniedException', 'UnauthorizedException'):
+            return response(503, {'error': f'El backend no tiene acceso a {operation}. Revisá los permisos del rol de Lambda y el acceso al modelo configurado.', 'code': 'UPSTREAM_ACCESS_DENIED'})
+    return response(503, {'error': f'No se pudo completar la operación con {operation}. Intentá nuevamente.', 'code': 'UPSTREAM_ERROR'})
