@@ -1,390 +1,333 @@
 # GasNet-Pressure-Monitor
 
-Dashboard web para visualizar presiones simuladas en redes de gas, con tramos
-geográficos en Google Maps, curvas en ECharts y consultas mediante Tecbot,
-un chatbot flotante conectado a Amazon Bedrock.
+Dashboard de presiones simuladas con Google Maps, ECharts y Tecbot, una ventana
+flotante que utiliza **Strands Agents SDK** y Amazon Bedrock. Conserva la única
+Lambda `POC-chatbot` y el endpoint `/chat` existentes.
 
-## Descripción
+## Arquitectura
 
-Este proyecto implementa una interfaz de usuario para visualizar datos críticos del sistema de distribución de gas, incluyendo:
+```text
+Navegador → CloudFront → archivos estáticos en S3 (tecnet-dashboard)
+                └────→ /chat → API Gateway → Lambda POC-chatbot
+                                                ├─ estado / escenarios → S3
+                                                └─ Strands → Bedrock → herramientas → S3
+```
 
-- Presiones de entrada upstream y downstream
-- Variaciones de presión
-- Comparación con mínimos contractuales
-- Consultas en lenguaje natural mediante chatbot integrado
+El frontend inicia la simulación con los valores de `Math.random()` de `chart.js`
+sólo cuando no existe un estado guardado. La Lambda valida esos datos y crea
+`simulation/state.json` con una escritura condicional. Desde entonces **S3 es la
+fuente compartida** para gráficos, escenarios y herramientas; otro navegador no
+reemplaza los datos con sus propios valores aleatorios.
 
-El frontend puede desplegarse como sitio estático. El chatbot envía la consulta
-y las mediciones en memoria a AWS API Gateway; una función Lambda valida el
-contexto e invoca Amazon Bedrock para generar la respuesta.
+No se agrega otra Lambda, base de datos, Knowledge Base ni colaboración entre
+agentes. No se procesan datasets de presión CSV. El GeoJSON sigue dibujando los
+tramos del mapa. No hay operaciones sobre equipos industriales.
 
-Las presiones se generan con `Math.random()` en JavaScript. Actualmente no se
-procesan datasets de presión CSV/JSON ni se generan pronósticos. El archivo
-GeoJSON de `data/` sí se utiliza para dibujar los tramos del mapa.
-
-## Estructura del Proyecto
+## Estructura
 
 ```text
 GasNet-Pressure-Monitor/
-├── .gitignore            # Exclusiones de Git para configuración y archivos locales
-├── README.md             # Documentación del proyecto
-├── index.html            # Interfaz principal del dashboard
-├── style_landing.css     # Estilos del dashboard
-├── config.js             # Configuración para desarrollo local (no se publica con Terraform)
-├── config.template.js    # Plantilla de configuración
-├── requirements.txt      # Listado heredado del procesamiento de datasets; sin uso actual
+├── index.html                     # Dashboard y ventana flotante
+├── style_landing.css
+├── config.template.js
+├── config.js                      # Sólo desarrollo local, ignorado por Git
+├── requirements.txt               # Strands/boto3 para backend y pruebas
+├── requirements-lambda.lock       # Dependencias fijadas para Linux/Python 3.11
 ├── js/
-│   ├── state.js          # Estado compartido y series simuladas por punto
-│   ├── dom.js            # Referencias a elementos de la interfaz
-│   ├── data.js           # Unidades de negocio y configuración de puntos de medición
-│   ├── config-check.js   # Comprobación de la configuración de Google Maps
-│   ├── main.js           # Inicialización del dashboard
-│   ├── map.js            # Carga del GeoJSON y selección de tramos en Google Maps
-│   ├── sidebar.js        # Tarjetas, métricas y selección de puntos de medición
-│   ├── chart.js          # Series simuladas y gráficos ECharts con DataZoom
-│   ├── calcularLinepack.js # Line Pack con presión media y parámetros físicos del punto
-│   └── navigation.js     # Apertura del chatbot flotante
-├── data/
-│   └── Gasoductos_y_ramales_CGP_05per.json  # Tramos en GeoJSON, convertido desde KMZ
+│   ├── state.js                   # Caché local del estado compartido
+│   ├── dom.js
+│   ├── data.js                    # Catálogo de puntos y parámetros físicos
+│   ├── config-check.js
+│   ├── main.js
+│   ├── map.js                     # Google Maps y selección de tramos
+│   ├── sidebar.js                 # Tarjetas y selección de puntos
+│   ├── chart.js                   # Simulación inicial, ECharts y botón de escenario
+│   ├── simulation-api.js          # Lectura/sincronización del estado mediante /chat
+│   ├── calcularLinepack.js
+│   └── navigation.js
 ├── chatbot/
-│   ├── index.html        # Redirección de enlaces anteriores al dashboard
-│   ├── chatbot.js        # Ventana flotante, contexto en memoria y conexión con la API
-│   └── widget.css        # Estilos de la ventana flotante
-├── lambda/
-│   └── chatbot/
-│       └── lambda_function.py  # Backend del chatbot en AWS Lambda
+│   ├── chatbot.js                 # Conversación, contexto de selección y enlaces de reportes
+│   ├── widget.css
+│   └── index.html                 # Redirige enlaces antiguos a ../index.html#tecbot
+├── data/
+│   └── Gasoductos_y_ramales_CGP_05per.json
+├── lambda/chatbot/
+│   ├── lambda_function.py         # Mismo handler; despacha acciones y chat
+│   ├── measurement_state.py       # Acceso S3, validación, escenarios y cálculos compartidos
+│   ├── agent_tools.py             # Las cuatro herramientas y creación de borradores
+│   └── chat_agent.py              # Agente Strands, modelo Bedrock y límites de ejecución
+├── templates/
+│   └── incident.html              # Template privado que Terraform carga en S3
+├── scripts/
+│   └── build_lambda.py            # Dependencias Linux + código para el ZIP existente
 ├── tests/
-│   └── test_chat_context.py # Validación del contexto y envío a Bedrock simulado
+│   ├── test_agent.py              # Estado, API, herramientas y ciclo real de Strands con AWS simulado
+│   └── test_simulation.js         # Botón, sincronización, errores y enlaces; sin npm
 └── terraform/
-    ├── main.tf           # Archivo principal de Terraform (actualmente vacío)
-    ├── provider.tf       # Proveedores, región y perfil de AWS
-    ├── frontend.tf       # Bucket privado, CloudFront, proxy /chat y archivos estáticos
-    ├── terraform.tfvars.example # Plantilla de la clave de Google Maps
-    ├── variables.tf      # Variables de infraestructura
-    ├── outputs.tf        # Salidas del despliegue
-    ├── api_gateway.tf    # API REST para acceder al chatbot
-    ├── lambda.tf         # Empaquetado y despliegue de la función Lambda
-    ├── bedrock.tf        # Archivo reservado para Bedrock (actualmente vacío)
-    ├── security.tf       # Clave de API, plan de uso, permisos IAM y backend de estado
-    ├── .terraform.lock.hcl  # Versiones fijadas de los proveedores
-    ├── lambda.zip        # Archivo ZIP presente en el repositorio
-    └── tests/
-        └── frontend.tftest.hcl # Pruebas con proveedores simulados (sin AWS)
+    ├── provider.tf                # AWS us-east-1, perfil trabajo; proveedores fijados
+    ├── variables.tf
+    ├── outputs.tf
+    ├── frontend.tf                # S3 privado, CloudFront OAC y proxy /chat
+    ├── simulation.tf              # Template y permisos S3 de la Lambda
+    ├── api_gateway.tf
+    ├── lambda.tf                  # ZIP, variables de entorno y Lambda existente
+    ├── security.tf                # IAM, API key, plan de uso y backend de Terraform
+    ├── main.tf                    # Reservado, actualmente vacío
+    ├── bedrock.tf                 # Reservado, actualmente vacío
+    ├── terraform.tfvars.example
+    ├── .terraform.lock.hcl
+    ├── lambda.zip                # Artefacto heredado; no se usa para desplegar
+    └── tests/frontend.tftest.hcl  # Infraestructura con proveedores simulados
 ```
 
-Se omiten del árbol los artefactos locales de Terraform, como `.terraform/`,
-`.terraform-poc/`, los archivos de estado y planes de Terraform,
-y el paquete generado `POC-chatbot-lambda.zip`.
+Se omiten `.venv/`, `build/`, cachés, planes, state, tfvars privados y el ZIP
+generado `terraform/POC-chatbot-lambda.zip`. `tests/test_agent.py` reemplaza las
+pruebas anteriores de `test_chat_context.py`.
 
-## Funcionalidades Principales
+## Estado y escenarios
 
-- **Mapa de gasoductos**: Tramos del GeoJSON y selección sincronizada con Puntos de Medición.
-- **Presiones simuladas**: Cada punto conserva sus propias curvas upstream y downstream durante la sesión. Pressure muestra el último valor upstream con dos decimales.
-- **Tendencias**: Historial simulado de 72 horas, vista inicial de las últimas 24 horas y DataZoom para ampliar o desplazar el intervalo.
-- **Chatbot flotante**: Consultas sobre los mismos datos del gráfico, sin abandonar ni reemplazar el mapa.
+El botón **Escenario caída de presión** envía una acción a la misma Lambda. Ésta
+modifica sólo el downstream del punto seleccionado: las últimas seis muestras
+horarias descienden progresivamente hasta el 80 % del mínimo contractual guardado.
+**Restaurar escenario normal** recupera exactamente la serie original. Upstream,
+fechas y otros puntos se conservan. El gráfico y Line Pack se actualizan con la
+respuesta confirmada de S3; un error no activa una anomalía local ficticia.
 
-## Requisitos
+Los cambios sobreviven a las recargas y son compartidos por todos los navegadores
+de esta demo. La página sincroniza al abrirse, recuperar el foco, cada 30 segundos
+y antes de consultar al bot. El control de versión y `If-Match` evitan perder
+cambios concurrentes: ante un conflicto se vuelve a leer el estado y se pide
+reintentar. Si S3 no está disponible se informa el error y no se habilita el botón
+hasta sincronizar.
 
-### Para el desarrollo
+La simulación es una **instantánea**, no un generador continuo. Sus fechas no
+avanzan al recargar. “Última hora” significa la última hora del historial
+persistido, con las dos muestras horarias disponibles; no se interpolan ni
+inventan mediciones. El comienzo de la caída puede ser anterior a esa hora.
 
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- Servidor HTTP para servir el frontend; por ejemplo, Python 3 con `http.server`.
-- Python 3 para ejecutar las pruebas del backend, que usan la biblioteca estándar y simulan las llamadas a AWS.
+Si se cambia el catálogo de `data.js`, es necesario migrar el estado persistido.
+Para reiniciar deliberadamente esta demo se puede respaldar y eliminar
+`simulation/state.json` desde S3 y recargar la página; no lo hace Terraform ni
+el chatbot automáticamente. Los incidentes existentes permanecen guardados.
 
-No es necesario instalar las dependencias del `requirements.txt` heredado para
-ejecutar el dashboard, el servidor HTTP o las pruebas actuales.
+## Herramientas y reportes
 
-### Para el despliegue
+| Herramienta | Resultado |
+| --- | --- |
+| `get_asset_status` | Estado de un punto o todos: upstream, downstream actual/normal, mínimo, desviación, calidad SIMULATED, escenario y fecha. |
+| `get_active_alarms` | Alarmas de downstream inferior al mínimo, por punto o todo el sitio; ID, tipo, severidad HIGH, mensaje, fecha y estado ACTIVE. |
+| `get_tag_history` | Última hora de downstream, upstream o minimum del punto indicado/seleccionado/de la conversación. |
+| `create_incident_draft` | Lee los hechos y el template desde S3, crea un HTML DRAFT privado y devuelve su ID y enlace temporal. |
 
-- Cuenta AWS y perfil local `trabajo`, con permisos para S3, CloudFront y los recursos del backend.
-- Clave de Maps JavaScript API restringida por sitio web en Google Cloud.
-- Terraform y acceso al backend remoto de estado ya configurado. Las pruebas con proveedores simulados requieren Terraform 1.7 o posterior.
+La presión esperada es la última muestra downstream del escenario normal. La
+desviación es `(actual - normal) / normal × 100`; se distingue del mínimo contractual.
+No se inventan unidades físicas. Los nombres repetidos requieren unidad o clave
+única. Para datos ausentes o errores, el agente debe explicarlo sin inventar hechos.
 
-## Instalación
+El agente puede responder saludos directamente y decidir qué herramientas de
+lectura necesita. La herramienta de escritura sólo se registra si el **mensaje
+actual** contiene una solicitud directa como “Generá un reporte del incidente”
+o “Podés crear un informe de este incidente?”. Consultas, negaciones, ejemplos
+y solicitudes hipotéticas no habilitan escritura. El historial del chat no
+autoriza nuevos reportes. Si la formulación no se reconoce, el bot pide una
+solicitud directa. No existe una herramienta para aprobar incidentes.
 
-### Despliegue independiente de la POC
+El borrador requiere una alarma activa. Sus valores se calculan desde el estado
+S3, nunca desde cifras aportadas por el modelo. Incluye ID, fecha, punto, alarma,
+presiones, desviación, severidad, descripción, evidencia, recomendaciones y DRAFT.
+Los valores se escapan antes de insertar HTML. Un ID de solicitud permite
+reintentar una petición fallida sin duplicar el reporte del mismo punto.
 
-La configuración de Terraform crea `POC-chatbot-api`, una Lambda `POC-chatbot` con el
-código de `lambda/chatbot`, y un rol IAM, API key y plan de uso propios.
-Conserva la región `us-east-1` y el perfil AWS `trabajo`.
-También administra el bucket privado `tecnet-dashboard`, la distribución de
-CloudFront y los objetos estáticos del dashboard. El nombre del bucket debe estar
-disponible globalmente; si ya existe en tu cuenta, debe importarse al state antes
-de administrarlo con esta configuración. No se intenta adoptar ni vaciar un bucket existente.
+La ventana muestra texto legible y, al crear un borrador, un enlace **Abrir
+borrador** válido durante 15 minutos. El objeto persiste después de expirar el
+enlace. El enlace firmado permite leer ese objeto a quien lo posea durante su
+vigencia. No se publica el reporte mediante CloudFront.
 
-El backend usa el bucket existente `terraform-state-mdp`, pero guarda el state
-en `POC-chatbot/terraform.tfstate`. El state original
-`bedrock-app/terraform.tfstate` no se debe copiar, migrar ni importar en la POC.
-La tabla de locks existente `terraform-lock` se comparte; no se recrea.
+### Objetos del bucket
 
-Primero copia `terraform/terraform.tfvars.example` a `terraform/terraform.tfvars`
-y reemplaza el valor de `google_maps_api_key` por tu clave de Google Maps. El archivo
-`terraform.tfvars` está excluido de Git. También puedes proporcionar la variable
-de entorno `TF_VAR_google_maps_api_key` en lugar de crear ese archivo.
+| Key | Administración y acceso |
+| --- | --- |
+| `index.html`, `js/*`, etc. | Lista explícita de Terraform; lectura pública mediante CloudFront OAC. |
+| `config.js` | Generado por Terraform, sin API key de API Gateway. |
+| `simulation/state.json` | Creado al abrir la interfaz por primera vez; lectura/escritura de Lambda. |
+| `templates/incident.html` | Terraform carga `templates/incident.html`; Lambda sólo lo lee. |
+| `incidents/INC-….html` | Lambda crea los DRAFT; lectura mediante URL firmada. |
 
-Desde PowerShell, en la raíz del repositorio:
+La política de CloudFront permite sólo los archivos estáticos enumerados. No
+permite leer estado, template ni incidentes. El rol de Lambda agrega Get/Put
+únicamente sobre estado e incidentes, Get sobre el template y ListBucket limitado
+al prefijo exacto del estado para distinguir ausencia de objeto y acceso denegado.
+No tiene DeleteObject. Se conserva el permiso existente de Bedrock InvokeModel.
 
-```powershell
-$env:AWS_PROFILE = 'trabajo'
-$env:TF_DATA_DIR = Join-Path (Get-Location) 'terraform/.terraform-poc'
-$env:TF_WORKSPACE = 'default'
-terraform -chdir=terraform init -reconfigure
-terraform -chdir=terraform validate
-terraform -chdir=terraform plan "-out=poc.tfplan"
-```
+### Contrato de la API
 
-`TF_DATA_DIR` separa también la configuración local del backend. Usar estas
-variables en cada terminal de la POC; no usar `init -migrate-state` ni reutilizar
-un plan del despliegue original. Antes del primer despliegue, comprobar que el
-plan solo crea recursos de la POC, sin modificaciones ni eliminaciones de
-recursos existentes. En despliegues posteriores, revisar que las actualizaciones
-correspondan únicamente a esa POC. No continuar si aparecen cambios sobre `ophub-chatbot`
-o `lambda-bedrock-role`.
+Todos los mensajes usan `POST /chat` y JSON:
 
-Después de revisar el plan, desplegar explícitamente:
+- `{ "action": "get_state" }` → `{ "state": ... }`.
+- `{ "action": "initialize_state", "measurementContext": ... }` → crea sólo si no existe.
+- `{ "action": "set_scenario", "assetKey": "…", "active": true, "version": "…" }` → estado confirmado.
+- `{ "query": "…", "selectedPointKey": "…", "conversationAssetKey": "…", "history": [...], "requestId": "UUID" }`
+  → `{ "response": "Texto", "incidents": [...], "conversationAssetKey": "…" }`.
 
-```powershell
-terraform -chdir=terraform apply poc.tfplan
-terraform -chdir=terraform output -raw frontend_url
-```
+`query` y `response` conservan el contrato anterior. El formato antiguo
+`{query, measurementContext}` también se admite: puede inicializar un estado
+ausente, pero jamás sobrescribe mediciones ya persistidas. El frontend nuevo sólo
+envía todas las series durante la inicialización.
 
-`terraform plan` muestra lo que se creará o actualizará; **no despliega el sitio**.
-`terraform apply poc.tfplan` publica los cambios del plan revisado. CloudFront
-puede tardar varios minutos en distribuir su configuración.
+Los últimos diez mensajes y el punto de la conversación se conservan en memoria
+del navegador, sin localStorage. Cerrar la ventana no los borra; recargar sí.
+La simulación y los reportes persisten en S3 independientemente del chat.
 
-Usa el output `frontend_url` para abrir el sitio por HTTPS. En Google Cloud,
-autoriza `https://<dominio-del-output-frontend_url>/*` como referencia HTTP de la
-clave y limita su uso a Maps JavaScript API. Por ejemplo:
-`https://d123example.cloudfront.net/*`. Agrega `http://localhost:8000/*` solo a la
-clave que utilices para desarrollo local. Hasta aplicar las restricciones
-correctas, Google Maps puede rechazar la carga desde el dominio nuevo.
+## Instalación y pruebas
 
-Los outputs `api_url` y `api_key` siguen disponibles para desarrollo local.
-No copies la clave de API Gateway al `config.js` publicado. El state y los planes
-contienen valores sensibles: `sensitive = true` oculta la salida habitual de
-Terraform, pero no elimina esos valores del state ni de los planes guardados.
-Conserva el acceso restringido al bucket de estado y no publiques planes o tfvars.
+Requisitos: Python 3.11 o posterior, Terraform 1.7 o posterior y un navegador.
+Node.js es opcional para ejecutar el test JavaScript. No se necesita npm.
+Ahora sí hay dependencias Python reales para el backend; el entorno virtual
+mantiene esas dependencias separadas de otras aplicaciones.
 
-El logging de API Gateway utiliza la configuración regional de CloudWatch ya
-existente en la cuenta. Esta POC no administra ni reemplaza esa configuración
-compartida.
-
-### 1. Clonar el repositorio
+Desde **Bash**, en la raíz del repositorio:
 
 ```bash
-git clone https://github.com/[usuario]/GasNet-Pressure-Monitor.git
-cd GasNet-Pressure-Monitor
+python -m venv .venv
+# Git Bash en Windows:
+source .venv/Scripts/activate
+# En Linux/macOS, usar en cambio: source .venv/bin/activate
+
+python -m pip install -r requirements.txt
+python -B -m unittest discover -s tests -v
+node tests/test_simulation.js # opcional; requiere Node.js instalado
+python scripts/build_lambda.py
 ```
 
-### 2. Configuración para desarrollo local
+Las pruebas Python ejecutan el SDK real de Strands con clientes S3/Bedrock
+simulados: no invocan modelos ni modifican AWS. Verifican estado normal, caída,
+restauración, concurrencia, alarmas, historia, template, DRAFT, ausencia de
+escrituras en consultas, datos inválidos, assets ambiguos/inexistentes y errores
+S3/Bedrock. El test JavaScript simula DOM/HTTP para comprobar el botón, gráficos
+alimentados por el estado, errores y enlaces seguros; no reemplaza una prueba
+visual en el navegador.
 
-Por razones de seguridad, las claves de API no se incluyen en el control de versiones.
+El build descarga wheels **Linux x86_64 / Python 3.11**, incluso desde Windows,
+verifica las dependencias y prepara `build/lambda`. Terraform sigue usando
+`archive_file` y el mismo ZIP. No se empaqueta `.venv`. Hay que reconstruir después
+de modificar Python o dependencias: Terraform rechaza un paquete desactualizado.
+Si cambiás `lambda_path`, pasá esa ruta de código a `build_lambda.py --source`.
 
-1. Crea un archivo llamado `./config.js` con el siguiente contenido:
-   ```javascript
-   const CONFIG = {
-      GOOGLE_MAPS_API_KEY: 'API KEY DE GOOGLE MAPS',
-      API_GATEWAY_URL: 'URL DEL API GATEWAY',
-      API_GATEWAY_KEY: 'API KEY DEL NUEVO API GATEWAY'
-   };
-   ```
+## Despliegue con Terraform (Bash)
 
-2. Completa los tres valores de la plantilla: la clave de Google Maps y la URL y clave de API Gateway.
-   - Puedes obtener una clave API desde la [Consola de Google Cloud](https://console.cloud.google.com/)
-   - Asegúrate de que la clave tenga acceso a la API de JavaScript de Maps
-   - Se recomienda restringir la clave por referencia HTTP para mayor seguridad
+La configuración conserva AWS `us-east-1`, perfil `trabajo`, el backend existente
+`terraform-state-mdp`, key `POC-chatbot/terraform.tfstate` y tabla `terraform-lock`.
+No migres ni copies el state `bedrock-app/terraform.tfstate` a esta POC.
 
-3. El archivo `config.js` está excluido del control de versiones en `.gitignore` para evitar exponer tu clave API.
+Configurá `google_maps_api_key` en `terraform/terraform.tfvars` a partir del
+archivo `.example`, o mediante `TF_VAR_google_maps_api_key`. El bucket
+`tecnet-dashboard` debe estar disponible o ya administrado en este state; si
+existe fuera del state se debe importar, no vaciar ni recrear.
 
-### 3. Ejecución local
-
-Para pruebas locales, puedes utilizar un servidor web ligero:
-
-#### Python 3
-
-```bash
-python -m http.server
-```
-
-Ejecuta el comando desde la raíz del proyecto y abre `http://localhost:8000`.
-No abras `index.html` mediante `file://`: la carga del GeoJSON requiere servir
-el sitio por HTTP o HTTPS.
-
-
-### 4. Publicación del frontend con Terraform
-
-Desde Bash, situado en la raíz de `GasNet-Pressure-Monitor`, y con la clave de Google
-Maps configurada en `terraform/terraform.tfvars` (o `TF_VAR_google_maps_api_key`):
+Con el entorno virtual activo y las pruebas anteriores aprobadas:
 
 ```bash
 export AWS_PROFILE=trabajo
 export TF_DATA_DIR="$PWD/terraform/.terraform-poc"
 export TF_WORKSPACE=default
 
+python scripts/build_lambda.py
 terraform -chdir=terraform init -reconfigure
+terraform -chdir=terraform fmt -check -recursive
 terraform -chdir=terraform validate
+terraform -chdir=terraform test
 terraform -chdir=terraform plan -out=poc.tfplan
 
-# Revisar el plan antes de aplicar.
+# Revisar el plan antes de aplicar:
 terraform -chdir=terraform apply poc.tfplan
 terraform -chdir=terraform output -raw frontend_url
 ```
 
-Genera un plan nuevo después de modificar archivos; no reutilices un plan anterior.
-El script `js/calcularLinepack.js` está incluido en la lista de publicación.
+`plan` no despliega: `apply` actualiza frontend, código y dependencias de la
+Lambda, variables, permisos y template. **No hace falta subir el template a mano.**
+La simulación se crea en la primera apertura exitosa posterior al despliegue.
+Generá siempre un plan nuevo después de modificar archivos. CloudFront puede
+tardar varios minutos en distribuir cambios.
 
-El procedimiento de plan/apply indicado arriba publica una lista explícita de
-archivos definida en `local.frontend_files` de `terraform/frontend.tf`: HTML,
-estilos, scripts y el GeoJSON. Si agregas un nuevo recurso estático, inclúyelo
-en esa lista. Los cambios de contenido se detectan mediante hashes.
+Las pruebas Terraform usan proveedores simulados: aunque internamente indiquen
+`command = apply`, no despliegan recursos reales. El plan real debe conservar
+los recursos de la POC y no modificar `ophub-chatbot` ni `lambda-bedrock-role`.
 
-El bucket `tecnet-dashboard` tiene el acceso público bloqueado. CloudFront lee
-los objetos mediante Origin Access Control (OAC), con una política limitada a
-esa distribución. No se habilita S3 Website Hosting: la entrada pública es
-CloudFront, con certificado HTTPS predeterminado y `index.html` como documento raíz.
+Variables de entorno de la Lambda: `BEDROCK_MODEL_ID`, `STATE_BUCKET`, `STATE_KEY`,
+`INCIDENT_TEMPLATE_KEY` e `INCIDENTS_PREFIX`, administradas por Terraform.
+`AWS_REGION` proviene de Lambda. La variable Terraform `bedrock_model_id` conserva
+el perfil de inferencia que ya utilizaba el chatbot. Las credenciales provienen
+del rol IAM, no del código ni del navegador.
 
-Los archivos del frontend se sirven con revalidación de caché y `config.js` con
-`no-store`; no hace falta ejecutar invalidaciones para cada cambio normal.
-El contenido de `/chat` no se almacena en caché. El despliegue de API Gateway
-se renueva cuando cambia su configuración, no por la fecha de cada plan.
+Se conserva el endpoint síncrono de API Gateway: Lambda tiene 28 segundos y el
+agente limita rondas, herramientas y tiempos de red. Una consulta demasiado
+lenta devuelve un error para reintentar o precisar la pregunta; no hay trabajo
+asíncrono en segundo plano. Si el borrador ya se guardó y falla el resumen final,
+se devuelve igualmente el enlace. El logging de API Gateway usa la configuración
+regional existente; se desactiva el registro de cuerpos completos de mensajes.
 
-### Configuración pública y credenciales
+### Configuración pública
 
-Terraform **no sube el `config.js` local**. Genera este formato en S3:
+Terraform no sube `config.js` local. Genera Google Maps API key y
+`API_GATEWAY_URL: '/chat'`; CloudFront agrega `x-api-key` al origen de API Gateway.
+La clave de Maps debe restringirse al dominio de CloudFront y a Maps JavaScript
+API desde Google Cloud. El bucket bloquea el acceso público y no usa Website Hosting.
 
-```javascript
-const CONFIG = {
-  GOOGLE_MAPS_API_KEY: 'CLAVE_RESTRINGIDA_DE_MAPS',
-  API_GATEWAY_URL: '/chat'
-};
+El sitio y `/chat` siguen siendo públicos: ocultar la clave del origen **no
+autentica usuarios**. Los visitantes de esta demo comparten la simulación y
+pueden activar escenarios y solicitar borradores. Una aplicación privada
+requeriría autenticación/autorización, fuera del alcance de esta implementación.
+El state y los planes de Terraform contienen datos sensibles; no se deben publicar.
+
+Para desarrollo local, completá `config.js` usando `config.template.js` con Maps,
+URL y API key de API Gateway de la POC. Serví el sitio con:
+
+```bash
+python -m http.server 8000
 ```
 
-- **Google Maps:** la clave debe estar disponible en el navegador. Su protección
-  consiste en restringir dominios y APIs en Google Cloud, no en ocultarla en JavaScript.
-  [Guía de Google](https://developers.google.com/maps/api-security-best-practices).
-- **URL de API Gateway:** no es un secreto. El navegador usa `/chat` en el mismo
-  dominio; CloudFront lo reenvía a la etapa `/dev/chat` de la API administrada aquí.
-- **Clave de API Gateway:** queda configurada como cabecera de origen `x-api-key`
-  en CloudFront. Se agrega al reenviar la solicitud, sin enviarla al navegador.
-  Se conserva en Terraform/state y es visible para administradores con permisos
-  sobre CloudFront. [Cabeceras de origen de CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html).
-- **Credenciales AWS:** se obtienen del perfil `trabajo`; nunca forman parte del frontend.
+Abrí `http://localhost:8000`; no uses `file://`. La API local configurada debe ser
+la versión desplegada con Strands y persistencia. El mapa sigue funcionando por
+Google Maps y el GeoJSON, sin reemplazar su vista por el chat.
 
-El sitio y `/chat` siguen siendo públicos: ocultar la clave de origen no autentica
-usuarios. Las API keys de API Gateway controlan uso, no sustituyen autorización.
-Si el chatbot debe ser privado, hace falta añadir autenticación/autorización
-(por ejemplo, Cognito y un authorizer). [Guía de API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-usage-plans.html).
+## Verificación después de desplegar
 
-Validación local de la infraestructura, sin desplegar recursos en AWS, después de
-inicializar los proveedores y definir `TF_DATA_DIR` como se indicó arriba:
+Si al ejecutar localmente aparece “La consulta debe contener entre 1 y 4000
+caracteres” durante la sincronización, la API puede seguir apuntando a la Lambda
+anterior. `pip install`, las pruebas y `build_lambda.py` sólo preparan archivos
+locales: es necesario aplicar el despliegue de Terraform y comprobar que
+`API_GATEWAY_URL` en `config.js` corresponda a esa API actualizada. Incluso servido
+desde localhost, este frontend utiliza el backend de AWS; `http.server` no ejecuta
+la Lambda Python. El chat sincroniza antes de enviar la pregunta, por lo que el
+mismo error también puede impedir todas las consultas.
 
-```powershell
-terraform -chdir=terraform fmt -check -recursive
-terraform -chdir=terraform validate
-terraform -chdir=terraform test
-```
+1. Abrir el dashboard y esperar “Escenario compartido sincronizado”.
+2. Seleccionar `037-001`, activar la caída y comprobar downstream inferior a 34.
+3. Recargar u abrir otro navegador: debe conservarse la misma caída.
+4. Preguntar “¿Qué está sucediendo en el sistema?”: debe identificar punto y alarma.
+5. Preguntar “¿Cómo evolucionó la presión durante la última hora?”: debe describir las muestras persistidas.
+6. Pedir “Generá un reporte del incidente”: debe aparecer ID, DRAFT y enlace al HTML.
+7. Abrir el enlace y verificar datos, evidencia y pendiente de revisión humana.
+8. Consultar sólo el estado nuevamente: no debe generarse otro incidente.
+9. Restaurar el escenario normal: debe desaparecer la alarma y recuperarse downstream.
 
-Las pruebas usan proveedores simulados y un estado de prueba separado; su
-`command = apply` no aplica cambios sobre tu cuenta de AWS.
+La validación con clientes simulados no prueba credenciales, permisos efectivos,
+latencia ni inferencia real en tu cuenta. Esos pasos se verifican tras `apply`.
 
-## Uso del Dashboard
+## Mapa, gráficos y Line Pack
 
-El campo **Line Pack** de cada tarjeta se calcula en `js/calcularLinepack.js`:
+La selección entre mapa y barra lateral sigue sincronizada. Se muestran 72 horas
+de historial, inicialmente las últimas 24, con DataZoom y leyendas. Pressure
+muestra el último upstream con dos decimales. Los códigos del GeoJSON se buscan
+en `properties.name`, `properties.id` o `id` de la geometría.
 
-```text
-P = (última presión upstream + última presión downstream) / 2
-A = π × D² / 4
-Line Pack = (P × A × L) / (Z × R × T)
-```
+`calcularLinepack.js` usa `P = (upstream + downstream) / 2`, `A = πD²/4` y
+`Line Pack = (P × A × L)/(Z × R × T)`, con parámetros de `data.js`, sin conversiones.
+Si faltan parámetros se muestra `—`; actualmente sólo los cuatro puntos de Mar
+del Plata tienen configuración física completa.
 
-Las dos presiones deben corresponder al mismo instante. `D`, `L`, `Z`, `R` y `T`
-provienen de `point.config` en `js/data.js`. Se utilizan las unidades de los datos
-sin conversiones y el resultado se muestra con dos decimales. Si faltan parámetros
-o las mediciones no son válidas, la tarjeta muestra `—`. Actualmente solo los
-cuatro puntos de Mar del Plata tienen configuración física completa.
+## Referencias
 
-1. Abre la URL del dashboard. El mapa carga los tramos del GeoJSON.
-2. Selecciona una unidad de negocio en la barra izquierda para mostrar sus puntos; se selecciona inicialmente el primero.
-3. Selecciona un punto en la barra derecha para mostrar sus curvas y engrosar el tramo asociado. Pressure indica su último valor upstream.
-4. También puedes seleccionar un tramo configurado desde el mapa: se abre su unidad y se resalta su tarjeta. Los tramos sin asociación en `js/data.js` muestran su código en el mapa.
-5. Usa la barra DataZoom, el arrastre o la rueda del mouse sobre el gráfico para explorar el historial. La grilla es discontinua y cada curva tiene su leyenda.
-6. Abre Tecbot desde el botón superior o el botón flotante inferior para consultar los datos de la sesión.
-
-La asociación geográfica busca el código del punto en `properties.name`,
-`properties.id` o el `id` de la geometría. En el GeoJSON actual, los códigos de
-gasoducto se encuentran en `properties.name`.
-
-## Uso del Chatbot
-
-Antes de consultar Tecbot, también puedes activar una anomalía con el botón
-**Escenario caída de presión**, ubicado debajo del gráfico. Requiere seleccionar
-un punto y modifica solo su downstream: las últimas seis muestras horarias caen
-progresivamente hasta el 80 % de `AppState.minimoContractual`. Las fechas, upstream
-y las series de los demás puntos se conservan.
-
-El botón pasa a **Restaurar escenario normal** y recupera los valores originales
-sin generar otros aleatorios. Cada punto conserva su escenario al cambiar de
-selección durante la sesión. El gráfico y Line Pack se actualizan; Pressure sigue
-mostrando upstream. Las consultas posteriores de Tecbot reciben las presiones
-modificadas. Al recargar la página se descartan los escenarios de la sesión.
-
-El chatbot se muestra como una ventana en la esquina inferior derecha del dashboard.
-El mapa permanece visible e interactivo; abrir o cerrar el chat no navega a otro
-documento ni reinicia la selección, las curvas o la conversación.
-
-### Acceso al Chatbot:
-
-1. Desde el dashboard principal, haz clic en "Tecbot" o en el botón flotante inferior.
-2. Selecciona un punto en el mapa o la barra lateral, o indica su nombre en la consulta.
-3. Escribe tu consulta en lenguaje natural y presiona Enter o haz clic en "Enviar"
-4. Cierra la ventana con la cruz o Escape mientras el foco esté dentro del chat.
-
-### Contexto en memoria
-
-`buildMeasurementContext()` en `chatbot/chatbot.js` construye la variable
-`AppState.measurementContext` al enviar cada consulta. Reutiliza las mismas series
-de `AppState.pointChartData` que muestran Pressure y ECharts. Si un punto aún no
-tiene serie, la genera una vez mediante `getMeasurementData()`.
-
-El contexto incluye todos los puntos, sus unidades, IDs y nombres de sensores cuando están definidos,
-presiones upstream/downstream, mínimos contractuales y fechas; identifica también
-el punto seleccionado. Las fechas se envían una sola vez en `timestamps`, y cada
-valor de las series corresponde a la misma posición de ese array.
-
-No se crean archivos de mediciones ni se usa localStorage o sessionStorage.
-El objeto se serializa como JSON solamente para enviar la solicitud HTTP:
-`{ query, measurementContext }`. Los datos y la conversación se pierden al recargar
-o cerrar la página. Abrir la antigua URL `chatbot/index.html` redirige al dashboard;
-el acceso habitual desde Tecbot permanece en la página actual.
-
-Lambda valida el contexto y lo incorpora al mensaje de Bedrock. Las instrucciones
-del modelo indican que los datos son simulados, que Pressure es el último valor
-upstream y que no debe inventar pronósticos ni información ausente. Cada consulta
-incluye la selección actual; no se envía el historial de mensajes del chat.
-
-**Despliegue:** además de publicar el frontend actualizado, hay que desplegar
-`lambda/chatbot/lambda_function.py` siguiendo el procedimiento de Terraform de esta
-documentación. Estos cambios de código no despliegan automáticamente recursos en AWS ni prueban una inferencia real.
-
-Pruebas del backend sin invocar AWS:
-
-```powershell
-python -B -m unittest discover -s tests -v
-```
-
-### Ejemplos de consultas:
-
-- "¿Cuál es la última presión simulada del Sistema Tandil - MDP?"
-- "¿Cuál es la última presión upstream de este punto?"
-- "¿Qué puntos están por debajo del mínimo contractual?"
-- "Muéstrame la variación de presión de este punto en las últimas 24 horas disponibles"
-
-El chatbot se conecta a AWS API Gateway y devuelve respuestas basadas en el contexto
-simulado de la sesión. Las respuestas del modelo, especialmente sus cálculos,
-deben contrastarse con los datos del gráfico.
-
-## Mantenimiento
-
-- Actualiza `js/data.js` para modificar las unidades, puntos y códigos asociados al GeoJSON.
-- Publica cambios de HTML, JavaScript, CSS y GeoJSON mediante `terraform plan` y `terraform apply`.
-- Si modificas el contexto o el contrato de la API, actualiza también `lambda/chatbot/lambda_function.py` y despliega el backend con Terraform.
-- Ejecuta las pruebas del backend antes de desplegar cambios en la validación o el envío del contexto a Bedrock.
+- [Strands Python SDK](https://strandsagents.com/docs/user-guide/sdk/quickstart/python/).
+- [Hooks de Strands](https://strandsagents.com/docs/user-guide/sdk/agents/hooks-events/).
+- [Escrituras condicionales S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html).
