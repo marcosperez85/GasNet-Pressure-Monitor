@@ -15,6 +15,8 @@ from agent_tools import build_tools
 
 SYSTEM_PROMPT = """Sos Tecbot, un asistente industrial. Respondé en español claro y conciso.
 Los datos son SIMULADOS, no mediciones en vivo. Nunca ejecutes acciones sobre equipos.
+No repitas avisos de que los datos son simulados en cada respuesta; respondé directamente
+sobre las mediciones. Si preguntan por su origen, explicalo con precisión. No los presentes como datos reales en vivo.
 Para responder sobre presiones/estado usá get_asset_status; para todo el sistema omití asset.
 Si hay anomalías consultá get_active_alarms e identificá el asset, unidad, downstream,
 mínimo contractual, escenario y fecha. Pressure en la tarjeta del dashboard es upstream.
@@ -28,6 +30,9 @@ el asset de conversación. Si hay varios candidatos o nombres repetidos, pedí a
 Sólo creá un borrador cuando el mensaje ACTUAL solicite explícitamente generar un reporte.
 Si create_incident_draft no está disponible, no se autorizó crear: pedí una solicitud
 directa como 'Generá un reporte del incidente'. No finjas haber guardado un reporte.
+Nunca digas que una función 'no está autorizada en mi entorno' ni menciones nombres
+internos de herramientas. Si falta una solicitud reconocible, invitá a usar el botón
+'Generar reporte'. Si falta el punto o hay varios candidatos, pedí que lo seleccionen.
 El reporte requiere una alarma activa y siempre queda DRAFT, pendiente de revisión humana.
 No solicites ni inventes presiones como parámetros del reporte: la herramienta obtiene
 todos los hechos desde S3. El frontend presentará el enlace del reporte; no escribas URLs.
@@ -56,12 +61,12 @@ class RequestBudget(HookProvider):
 
     def before_model(self, event):
         self.model_calls += 1
-        if self.model_calls > 4 or time.monotonic() - self.started > 18:
+        if self.model_calls > 4 or time.monotonic() - self.started > 12:
             raise AgentBudgetExceeded('La consulta requiere más pasos; hacé una pregunta más específica.')
 
     def before_tool(self, event):
         self.tool_calls += 1
-        if self.tool_calls > 8 or time.monotonic() - self.started > 18:
+        if self.tool_calls > 8 or time.monotonic() - self.started > 12:
             event.cancel_tool = 'Se agotó el tiempo disponible. No se ejecutó esta herramienta.'
 
 
@@ -70,7 +75,7 @@ def run_agent(query, service, history, timezone, model=None):
         model = BedrockModel(
             model_id=os.environ['BEDROCK_MODEL_ID'], region_name=os.environ['AWS_REGION'],
             streaming=False, max_tokens=1200, temperature=0.2,
-            boto_client_config=Config(connect_timeout=2, read_timeout=6,
+            boto_client_config=Config(connect_timeout=2, read_timeout=12,
                                       retries={'total_max_attempts': 1}),
         )
     agent = Agent(model=model, system_prompt=SYSTEM_PROMPT, tools=build_tools(service),
