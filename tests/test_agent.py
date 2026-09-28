@@ -285,6 +285,21 @@ class AgentTests(unittest.TestCase):
         self.client.converse.return_value = model_response([{'text': '{"assets": []}'}])
         self.assertNotIn('{', run_agent('Estado', self.service, [], 'UTC', model=self.model))
 
+    def test_chat_uses_utc_even_with_legacy_timezone(self):
+        self.assertEqual(self.state['timezone'], 'UTC')
+        legacy, _ = self.repo.read()
+        legacy['timezone'] = 'Atlantic/Reykjavik'
+        self.repo.write(legacy)
+        with patch.object(handler, 'run_agent', return_value='Hora en UTC.') as agent:
+            self.assertEqual(self.invoke({'query': '¿Qué hora tienen las mediciones?'})['statusCode'], 200)
+        self.assertEqual(agent.call_args.args[3], 'UTC')
+        self.client.converse.return_value = model_response([{'text': 'Hora en UTC.'}])
+        run_agent('¿Qué hora tienen las mediciones?', self.service, [], 'Atlantic/Reykjavik', model=self.model)
+        request = self.client.converse.call_args.kwargs
+        prompt = json.loads(request['messages'][0]['content'][0]['text'])
+        self.assertEqual(prompt['timezone'], 'UTC')
+        self.assertIn('etiquetalas', request['system'][0]['text'])
+
     def test_missing_state_and_s3_denial(self):
         del self.s3.objects['simulation/state.json']
         self.assertEqual(self.invoke({'action': 'get_state'})['statusCode'], 404)
