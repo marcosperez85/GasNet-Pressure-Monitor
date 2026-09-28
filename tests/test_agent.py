@@ -9,7 +9,8 @@ import sys
 import unittest
 from unittest.mock import Mock, patch
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ReadTimeoutError
+from html.parser import HTMLParser
 from strands.models import BedrockModel
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -205,12 +206,36 @@ class AgentTests(unittest.TestCase):
 
     def test_report_intent_is_current_explicit_request(self):
         for query in ['Generá un reporte del incidente.', 'Podés crear un informe de este incidente?',
-                      'Preparame un borrador del incidente']:
+                      'Preparame un borrador del incidente', 'Quiero que generes un reporte',
+                      'Me podés generar un reporte del incidente?', 'Necesito un reporte',
+                      'Podrías generarme un informe?']:
             self.assertTrue(report_requested(query), query)
         for query in ['Qué está sucediendo?', 'No generes un reporte.', '¿Cómo generar un reporte?',
                       'Si baja la presión, generá un reporte', 'Decí "generá un reporte"',
                       'Estado, sin crear un reporte', 'Explicame qué pasaría al crear un reporte']:
             self.assertFalse(report_requested(query), query)
+
+    def test_quick_report_prompt_authorizes_draft(self):
+        prompts = []
+        class Buttons(HTMLParser):
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag == 'button' and 'data-tecbot-prompt' in attrs:
+                    prompts.append(attrs['data-tecbot-prompt'])
+        Buttons().feed((ROOT / 'index.html').read_text(encoding='utf-8'))
+        self.assertEqual(len(prompts), 4)
+        self.assertEqual([report_requested(p) for p in prompts], [False, False, False, True])
+
+    def test_diagnostic_errors_distinguish_timeout_throttle_and_permissions(self):
+        cases = [(ReadTimeoutError(endpoint_url='https://example.test'), 'UPSTREAM_TIMEOUT'),
+                 (aws_error('ThrottlingException'), 'UPSTREAM_THROTTLED'),
+                 (aws_error('AccessDeniedException'), 'UPSTREAM_ACCESS_DENIED'),
+                 (AgentBudgetExceeded(), 'AGENT_BUDGET_EXCEEDED')]
+        for cause, expected in cases:
+            wrapped = RuntimeError('Agent failed')
+            wrapped.__cause__ = cause
+            result = handler.failed_agent_response(None, wrapped, 'Bedrock')
+            self.assertEqual(json.loads(result['body'])['code'], expected)
 
     def test_real_strands_tool_loop_returns_human_response(self):
         self.activate()
