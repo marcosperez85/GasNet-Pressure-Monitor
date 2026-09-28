@@ -112,6 +112,17 @@ el chatbot automáticamente. Los incidentes existentes permanecen guardados.
 
 ## Herramientas y reportes
 
+La ventana ofrece cuatro accesos rápidos: **Estado del sistema**, **Alarmas activas**,
+**Última hora** y **Generar reporte**. Cada botón envía una consulta predefinida y se
+deshabilita mientras se procesa la respuesta. Para historial y reportes, seleccioná
+el punto en el mapa o en la barra lateral. La presentación del chat omite el aviso
+repetitivo sobre datos simulados; el origen de los datos sigue registrado internamente.
+
+Los errores distinguen timeout, límite de pasos del agente, saturación y permisos.
+Bedrock admite hasta 12 segundos por llamada; el presupuesto del agente limita el
+inicio de nuevas rondas para respetar el endpoint síncrono existente. Los logs de
+Lambda conservan el detalle técnico necesario para diagnosticar fallos de AWS.
+
 | Herramienta | Resultado |
 | --- | --- |
 | `get_asset_status` | Estado de un punto o todos: upstream, downstream actual/normal, mínimo, desviación, calidad SIMULATED, escenario y fecha. |
