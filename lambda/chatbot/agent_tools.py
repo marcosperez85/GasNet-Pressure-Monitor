@@ -20,10 +20,13 @@ def report_requested(query):
         c in text for c in ('"', '“', '”', '`')
     ):
         return False
+    if re.search(r'^\s*[¿¡]?(?:por favor[, ]+)?(?:quiero|necesito|solicito)\s+(?:un|el)\s+(?:reporte|informe|borrador)\b', text):
+        return True
     return bool(re.search(
         r'^\s*[¿¡]?(?:por favor[, ]+)?(?:ahora[, ]+)?'
-        r'(?:(?:quiero|necesito)(?: que)?\s+|(?:podes|podrias|puedes|podrias)\s+)?'
-        r'(genera|generar|generame|crea|crear|creame|prepara|preparar|preparame|'
+        r'(?:(?:quiero|necesito)(?: que)?\s+|(?:me\s+)?(?:podes|podrias|puedes|puede)\s+)?'
+        r'(?:me\s+)?'
+        r'(genera|generar|generame|generes|generarme|crea|crear|creame|crees|crearme|prepara|preparar|preparame|prepares|'
         r'arma|armar|armame|redacta|redactar|redactame)\b[^.!?\n]{0,100}\b(reporte|informe|borrador)\b', text
     ))
 
