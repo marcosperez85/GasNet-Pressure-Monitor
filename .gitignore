@@ -2,6 +2,9 @@
 config.js
 ./js/config.js
 .venv
+build/
+__pycache__/
+*.pyc
 
 # Archivos de estado de Terraform
 terraform/.terraform/
