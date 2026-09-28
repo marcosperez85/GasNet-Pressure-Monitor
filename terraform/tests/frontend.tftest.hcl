@@ -64,4 +64,30 @@ run "frontend_configuration" {
     condition     = aws_s3_object.frontend["chatbot/widget.css"].content_type == "text/css; charset=utf-8" && aws_s3_object.frontend["data/Gasoductos_y_ramales_CGP_05per.json"].content_type == "application/json; charset=utf-8"
     error_message = "Los estilos y el GeoJSON deben publicarse con sus tipos correctos."
   }
+
+  assert {
+    condition = alltrue([
+      for resource in jsondecode(aws_s3_bucket_policy.frontend.policy).Statement[0].Resource :
+      !endswith(resource, "/*") && !strcontains(resource, "/simulation/") && !strcontains(resource, "/incidents/") && !strcontains(resource, "/templates/")
+    ])
+    error_message = "CloudFront sólo debe leer los archivos públicos, nunca estado, templates o reportes."
+  }
+
+  assert {
+    condition     = aws_lambda_function.chatbot.environment[0].variables.STATE_BUCKET == aws_s3_bucket.frontend.id && aws_lambda_function.chatbot.environment[0].variables.STATE_KEY == local.simulation_state_key
+    error_message = "La Lambda y el dashboard deben usar el mismo bucket y estado de simulación."
+  }
+
+  assert {
+    condition     = aws_s3_object.incident_template.key == local.incident_template_key && !contains(keys(aws_s3_object.frontend), "templates/incident.html")
+    error_message = "Terraform debe cargar el template en una key privada separada."
+  }
+
+  assert {
+    condition = alltrue([
+      for statement in jsondecode(aws_iam_role_policy.simulation_storage.policy).Statement :
+      !contains(statement.Action, "s3:*") && !contains(statement.Action, "s3:DeleteObject")
+    ])
+    error_message = "El agente sólo debe tener los permisos S3 necesarios, sin borrado ni acceso general."
+  }
 }
