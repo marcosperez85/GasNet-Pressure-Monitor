@@ -1,5 +1,8 @@
 let tecbotSending = false;
 let tecbotReturnFocus = null;
+let tecbotHistory = [];
+let tecbotConversationAsset = null;
+let tecbotPendingRequest = null;
 
 function openChatbot() {
     tecbotReturnFocus = document.activeElement;
@@ -75,6 +78,10 @@ async function sendMessage() {
     const input = document.getElementById('tecbotInput');
     const query = input.value.trim();
     if (!query || tecbotSending) return;
+    if (AppState.sharedStateBusy) {
+        appendChatMessage('error', 'Tecbot', 'Esperá a que termine de guardarse el escenario.');
+        return;
+    }
     if (query.length > 4000) {
         appendChatMessage('error', 'Error', 'La consulta puede tener hasta 4000 caracteres.');
         return;
@@ -89,35 +96,49 @@ async function sendMessage() {
     input.value = '';
     appendChatMessage('user', 'Vos', query);
     const loading = appendChatMessage('loading', 'Tecbot', 'Consultando las mediciones…');
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
     try {
-        const base = CONFIG.API_GATEWAY_URL.replace(/\/+$/, '');
-        const endpoint = base.endsWith('/chat') ? base : base + '/chat';
-        const headers = { 'Content-Type': 'application/json' };
-        // En CloudFront la clave se agrega en el origen; solo se usa aquí en desarrollo local.
-        if (CONFIG.API_GATEWAY_KEY) headers['x-api-key'] = CONFIG.API_GATEWAY_KEY;
-        // El contexto solo vive en memoria y en esta solicitud; no se persiste.
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ query, measurementContext: buildMeasurementContext() }),
-            signal: controller.signal
+        await syncSharedSimulation();
+        const selectedPointKey = measurementKey(AppState.selectedMeasurementPoint);
+        const fingerprint = JSON.stringify([query, selectedPointKey, tecbotConversationAsset]);
+        if (tecbotPendingRequest?.fingerprint !== fingerprint) {
+            tecbotPendingRequest = { fingerprint, id: crypto.randomUUID() };
+        }
+        const result = await dashboardRequest({
+            query, selectedPointKey, conversationAssetKey: tecbotConversationAsset,
+            history: tecbotHistory, requestId: tecbotPendingRequest.id
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'No se pudo obtener respuesta.');
         if (typeof result.response !== 'string') throw new Error('Respuesta de la API no válida.');
         appendChatMessage('bot', 'Tecbot', result.response);
+        appendIncidentLinks(result.incidents || []);
+        tecbotConversationAsset = result.conversationAssetKey || null;
+        tecbotHistory.push({ role: 'user', text: query }, { role: 'assistant', text: result.response.slice(0, 6000) });
+        tecbotHistory = tecbotHistory.slice(-10);
+        tecbotPendingRequest = null;
     } catch (error) {
         console.error('Error al consultar Tecbot:', error);
         appendChatMessage('error', 'Error', error.name === 'AbortError'
             ? 'La consulta tardó demasiado. Intentá nuevamente.' : error.message);
         if (!input.value) input.value = query;
     } finally {
-        clearTimeout(timeout);
         loading.remove();
         send.disabled = false;
         tecbotSending = false;
+    }
+}
+
+function appendIncidentLinks(incidents) {
+    for (const incident of incidents) {
+        if (incident.status !== 'DRAFT' || typeof incident.id !== 'string') continue;
+        let url;
+        try { url = new URL(incident.url); } catch (_) { continue; }
+        if (url.protocol !== 'https:') continue;
+        const message = appendChatMessage('bot', 'Reporte', `${incident.id} — DRAFT, pendiente de revisión humana. `);
+        const link = document.createElement('a');
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Abrir borrador (enlace válido por 15 minutos)';
+        message.appendChild(link);
     }
 }
 
