@@ -1,0 +1,4 @@
+# Backend Lambda y pruebas. No se requieren para servir el frontend estático.
+-c requirements-lambda.lock
+strands-agents==1.57.1
+boto3==1.43.103
